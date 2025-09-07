@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft 365 Services Status Report</title>
+    <style>
+        body { font-family: ui-sans-serif, -apple-system, system-ui, Segoe UI, Helvetica, Apple Color Emoji, Arial, sans-serif, Segoe UI Emoji, Segoe UI Symbol; font-size: 14px; margin: 20px; padding: 20px; color: #333; }
+        h2 { color: #333333; margin-top: 20px; }
+		h3 { color: #333333; margin-top: 20px; }
+        table { text-align: center; width: 50%; border-collapse: collapse; border-radius: 8px; overflow: hidden; box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);}
+        td { padding: 12px; border-bottom: 1px solid #ddd; }
+        th { background-color: #f0f0f0; padding: 12px; text-align: center; }
+		.tdemoji { font-size: 30px; vertical-align: middle; line-height: 2; }
+		.tdimg { width: 100px; height: 100px; }
+		.state { font-size: 15px; }
+		.success { background-color: green; color: white; }
+		.warning { background-color: orange; color: white; }
+		.interrupted { background-color: black; color: white; }
+		.failed { background-color: red; color: white; }
+		.notfound { background-color: grey; color: white; }
+		
+    </style>
+</head>
+<body>
+    <h2>Microsoft 365 Services Status Report</h2>
+    <table>
+        <tr>
+			<th></th>
+            <th>Service</th>
+            <th>Status</th>
+            <th>Success</th>
+			<th>Failure</th>
+			<th>Interrupted</th>
+			<th>Start</th>
+			<th>End</th>
+        </tr>        
+		<tr>
+			<td class="tdemoji"><img class="tdimg" src="https://github.com/boupipou/public-boupipou-rip-o/blob/main/Pictures/wallet/success.png?raw=true"></img></td>
+            <td>AzureAD</td>
+            <td class="success"><b class="state"> SUCCESS</b></td>
+            <td> 100%</td>
+			<td> 0%</td>
+			<td> 0%</td>
+			<td>24/02/2025 14:08:58</td>
+			<td>24/02/2025 14:17:12</td>
+        </tr>        
+		<tr>
+			<td class="tdemoji"><img class="tdimg" src="https://github.com/boupipou/public-boupipou-rip-o/blob/main/Pictures/wallet/success.png?raw=true"></img></td>
+            <td>Exchange</td>
+            <td class="success"><b class="state"> SUCCESS</b></td>
+            <td> 97%</td>
+			<td> 3%</td>
+			<td> 0%</td>
+			<td>24/02/2025 01:28:10</td>
+			<td>24/02/2025 02:04:18</td>
+        </tr>        
+		<tr>
+			<td class="tdemoji"><img class="tdimg" src="https://github.com/boupipou/public-boupipou-rip-o/blob/main/Pictures/wallet/success.png?raw=true" alt="SUCCESS"></img></td>
+            <td>Intune</td>
+            <td class="success"><b class="state"> SUCCESS</b></td>
+            <td> 100%</td>
+			<td> 0%</td>
+			<td> 0%</td>
+			<td>24/02/2025 16:56:51</td>
+			<td>24/02/2025 17:06:32</td>
+        </tr>        
+		<tr>
+			<td class="tdemoji"><img class="tdimg" src="https://github.com/boupipou/public-boupipou-rip-o/blob/main/Pictures/wallet/interrupted.png?raw=true"></img></td>
+            <td>SharePoint</td>
+            <td class="interrupted"><b class="state"> INTERRUPTED</b></td>
+            <td> 10%</td>
+			<td> 5%</td>
+			<td> 85%</td>
+			<td>24/02/2025 14:19:56</td>
+			<td>24/02/2025 14:40:42</td>
+        </tr>        
+		<tr>
+            <td><span class="tdemoji"><img class="tdimg" src="https://github.com/boupipou/public-boupipou-rip-o/blob/main/Pictures/wallet/failure.png?raw=true"></img></span></td>
+			<td>Teams</td>
+            <td class="failed"><b class="state"> FAILED</b></td>
+            <td> 25%</td>
+			<td> 50%</td>
+			<td> 25%</td>
+			<td>24/02/2025 16:56:43</td>
+			<td>24/02/2025 17:12:10</td>
+        </tr>        
+		<tr>
+			<td class="tdemoji"><img class="tdimg" src="https://github.com/boupipou/public-boupipou-rip-o/blob/main/Pictures/wallet/warning.png?raw=true"></img></td>
+            <td>OneDrive</td>
+            <td class="warning"><b class="state"> WARNING</b></td>
+            <td> 66%</td>
+			<td> 34%</td>
+			<td> 0%</td>
+			<td>24/02/2025 02:02:45</td>
+			<td>24/02/2025 08:55:22</td>
+        </tr>        
+		<tr>
+            <td class="tdemoji"><img class="tdimg" src="https://github.com/boupipou/public-boupipou-rip-o/blob/main/Pictures/wallet/notfound.png?raw=true"></img></td>
+			<td>SecurityCompliance</td>
+           <td class="notfound"><b class="state"> NOTFOUND</b></td>
+            <td> -%</td>
+			<td> -%</td>
+			<td> -%</td>
+			<td>NO DATA</td>
+			<td>NO DATA</td>
+        </tr>    
+	</table>
+</body>
+</html>
