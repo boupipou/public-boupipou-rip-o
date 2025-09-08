@@ -8,6 +8,7 @@
 
 if(!($EmojiType)) {
 	$EmojiType = "Custom"
+	$Custom = $true
 }
 
 if($DebugEnabled) {
@@ -139,8 +140,8 @@ $htmlContent = @"
         table { text-align: center; width: 50%; border-collapse: collapse; border-radius: 8px; overflow: hidden; box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);}
         td { padding: 12px; border-bottom: 1px solid #ddd; }
         th { background-color: #f0f0f0; padding: 12px; text-align: center; }
-		.tdemoji { font-size: 30px; vertical-align: middle; line-height: 2; }
-		.tdimg { width: 100px; height: 100px; vertical-align: middle; line-height: 2; }
+		.tdimg { width: 100px !important; height: 100px !important; object-fit: contain; display: block; margin: auto;
+}
 		.state { font-size: 15px; }
 		.success { background-color: green; color: white; }
 		.warning { background-color: orange; color: white; }
@@ -178,7 +179,8 @@ $htmlContent = @"
         h2 { color: #333333; margin-top: 20px; }
 		h3 { color: #333333; margin-top: 20px; }
         table { text-align: center; width: 30%; border-collapse: collapse; border-radius: 8px; overflow: hidden; box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2); }
-        td { padding: 12px; border-bottom: 1px solid #ddd; }
+        td { border: 1px solid #ddd;   /* force all sides */ }
+		tr { border-bottom: 1px solid #ddd; }
         th { background-color: #f0f0f0; padding: 12px; text-align: center; }
 		.emoji { font-size: 30px; line-height: 2; display: flex; justify-content: center; align-items: center; }
 	</style>
@@ -293,33 +295,30 @@ Foreach($ServiceName in $ServicesName) {
 	}
 	
 	if($Debug) { "globalSuccess: {0}" -f $globalSuccess }
-	
-	if(!$Custom) { #If custom image is selected, change the job statuses text to another color
-		switch -regex ($globalSuccess) {
-			"SUCCESS" {
-				$Class = '<span style="color: green;">'
-			}
-			"FAILURE" {
-				$Class = '<span style="color: red;">'
-			}
-			"NOTFOUND" {
-				$Class = '<span style="color: gray;">'
-			}
-			"WARNING" {
-				$Class = '<span style="color: orange;">'
-			}
-			"INTERRUPTED" {
-				$Class = '<span style="color: black;">'
-			}
+
+	switch -regex ($globalSuccess) {
+		"SUCCESS" {
+			$Class = '<span style="color: green;">'
 		}
-		if($Debug) { "class: {0}" -f $Class }
+		"FAILURE" {
+			$Class = '<span style="color: red;">'
+		}
+		"NOTFOUND" {
+			$Class = '<span style="color: gray;">'
+		}
+		"WARNING" {
+			$Class = '<span style="color: orange;">'
+		}
+		"INTERRUPTED" {
+			$Class = '<span style="color: black;">'
+		}
 	}
+	
+	if($Debug) { "class: {0}" -f $Class }
 	
 	switch ($EmojiType) {
 		"Custom" {
-			$Emoji = @"
-			<img class="tdimg" src="$RepositoryPathPictures/$($globalSuccess.ToLower())`.png"></img>
-"@
+			$Emoji = "<img src=""$RepositoryPathPictures/$($globalSuccess.ToLower()).png?raw=true"" width=""100"" height=""100"" border=""0"" style=""display:block;margin:auto;"" />"
 		}
 		"Meteo" {
 			if($globalSuccess -eq "SUCCESS") {
@@ -382,17 +381,34 @@ Foreach($ServiceName in $ServicesName) {
 		$ServiceReport = @([PSCustomObject]@{Emoji = $Emoji; Service = $ServiceName; Status = $globalSuccess; "Success Percentage" = "-%"; "Failure Percentage" = "-%"; "Interrupted Percentage" = "-%"; Start = "NO DATA"; End = "NO DATA"})
 	}
 	
-	if($Custom) {	
-	$class = $globalSuccess.ToLower()
-	    $htmlContent += @"
-			<td><span class="tdemoji">$($ServiceReport.Emoji)</span></td>
+	if ($Custom) {
+    # map background / font color
+    switch -regex ($ServiceReport.Status) {
+        "SUCCESS"     { $BgColor = "green";  $FontColor = "white" }
+        "FAILURE"     { $BgColor = "red";    $FontColor = "white" }
+        "NOTFOUND"    { $BgColor = "gray";   $FontColor = "white" }
+        "WARNING"     { $BgColor = "orange"; $FontColor = "white" }
+        "INTERRUPTED" { $BgColor = "black";  $FontColor = "white" }
+    }
+
+    $htmlContent += @"
+        <tr>
+            <td>$Emoji</td>
             <td>$($ServiceReport.Service)</td>
-			<td><span class="$class"><b class="state">$($ServiceReport.Status)</b></span></td>
-			<td>$($ServiceReport."Success Percentage")</td>
-			<td>$($ServiceReport."Failure Percentage")</td>
-			<td>$($ServiceReport."Interrupted Percentage")</td>
-			<td>$($ServiceReport.Start)</td>
-			<td>$($ServiceReport.End)</td>
+			<td style="padding:0; margin:0; border-bottom:1px solid #ddd;">
+				<table cellspacing="0" cellpadding="0" border="0" width="100%">
+					<tr>
+						<td bgcolor="green" style="color:white;text-align:center; padding:12px;">
+							<b class="state">SUCCESS</b>
+						</td>
+					</tr>
+				</table>
+			</td>
+            <td>$($ServiceReport."Success Percentage")</td>
+            <td>$($ServiceReport."Failure Percentage")</td>
+            <td>$($ServiceReport."Interrupted Percentage")</td>
+            <td>$($ServiceReport.Start)</td>
+            <td>$($ServiceReport.End)</td>
         </tr>
 "@
 	} else {
