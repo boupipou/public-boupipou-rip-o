@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Azure Role Assignments</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+
+<body onload="initTheme()">
+<header>
+  <div style="display: flex; align-items: center; gap: 15px;">
+    <button onclick="goBack()" class="back-button">⬅️ Back</button>
+    <div class="logo-title">
+      <img src="../Pictures/contoso.png" alt="Logo">
+      <div class="title-block">
+        <div class="env-name">Demo environment</div>
+        <div class="page-name">Azure Role Assignments</div>
+      </div>
+    </div>
+  </div>
+  <div class="icon-bar">
+    <span class="theme-toggle" onclick="toggleTheme()">🌓</span>
+  </div>
+</header>
+
+<div class="page-container">
+  <div id="iamCounters" class="indicator-bar"></div>
+
+  <div class="filters">
+    <select id="subscriptionSelect" class="dropdown">
+      <option value="">📂 Choose a subscription…</option>
+    </select>
+    <input id="tableSearch" type="text" placeholder="🔍 Search..." onkeyup="filterIAM()" class="search" />
+  </div>
+
+  <table id="dataTable" class="styled-table">
+    <thead>
+      <tr>
+        <th onclick="sortTable(0)">ManagementGroup</th>
+        <th onclick="sortTable(1)">Subscription</th>
+        <th onclick="sortTable(2)">DisplayName</th>
+        <th onclick="sortTable(3)">SignInName</th>
+        <th onclick="sortTable(4)">ObjectType</th>
+        <th onclick="sortTable(5)">RoleDefinitionName</th>
+        <th onclick="sortTable(6)">Scope</th>
+      </tr>
+    </thead>
+    <tbody id="IAMBody"></tbody>
+  </table>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="common.js"></script>
+<script>
+let csvData = [];
+const tbody = document.getElementById('IAMBody');
+const select = document.getElementById('subscriptionSelect');
+
+/* normalize */
+const norm = v => (v || '').replace(/^"|"$/g, '').trim().toLowerCase();
+
+/* counters */
+function updateIAMCounters(rows) {
+  const owners       = rows.filter(r => norm(r.RoleDefinitionName) === 'owner').length;
+  const contributors = rows.filter(r => norm(r.RoleDefinitionName) === 'contributor').length;
+  const total        = rows.length;
+  document.getElementById('iamCounters').textContent =
+    `Owners: ${owners} – Contributors: ${contributors} – Total permissions: ${total}`;
+}
+
+/* CSV loader */
+async function loadCsv() {
+  const baseUrl = 'https://dscshow.blob.core.windows.net/priv';   // ✅ correct endpoint
+  const csvPath = 'data/Get-AZRoleAssignments/Get-AZRoleAssignments_latest.csv';
+  const sas = ''; // empty since container is public
+  const fullUrl = `${baseUrl}/${csvPath}${sas}`;
+
+  const res = await fetch(fullUrl);
+  const txt = await res.text();
+  const parsed = Papa.parse(txt, {
+    header: true,
+    dynamicTyping: true,
+    delimiter: ';',
+    skipEmptyLines: true,
+    transformHeader: h => h.trim().replace(/^"|"$/g,'')
+  });
+  csvData = parsed.data;
+}
+
+/* build dropdown */
+function buildSubscriptionList() {
+  const subs = [...new Set(csvData.map(r => r.Subscription).filter(Boolean))].sort();
+  subs.forEach(name => {
+    const o = document.createElement('option');
+    o.value = o.textContent = name;
+    select.appendChild(o);
+  });
+  select.addEventListener('change', () => { renderTable(); filterIAM(); });
+}
+
+/* render table */
+function renderTable() {
+  const chosen = select.value;
+  tbody.innerHTML = '';
+  if (!chosen) { updateIAMCounters([]); return; }
+  const rows = csvData.filter(r => r.Subscription === chosen);
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    ['ManagementGroup','Subscription','DisplayName','SignInName','ObjectType','RoleDefinitionName','Scope']
+      .forEach(k => {
+        const td = document.createElement('td');
+        td.textContent = r[k] ?? '';
+        tr.appendChild(td);
+      });
+    tbody.appendChild(tr);
+  });
+  updateIAMCounters(rows);
+}
+
+/* search filter */
+function filterIAM() {
+  const q = document.getElementById('tableSearch').value.toLowerCase();
+  const rows = [...tbody.rows];
+  const visible = [];
+  rows.forEach(r => {
+    const hit = r.textContent.toLowerCase().includes(q);
+    r.style.display = hit ? '' : 'none';
+    if (hit) visible.push(r);
+  });
+  updateIAMCounters(visible.map(r => ({
+    RoleDefinitionName: r.cells[5].textContent
+  })));
+}
+
+/* boot */
+window.addEventListener('load', async () => {
+  await loadCsv();
+  buildSubscriptionList();
+  renderTable();
+});
+</script>
+<div id="footer-placeholder"></div>
+</body>
+</html>

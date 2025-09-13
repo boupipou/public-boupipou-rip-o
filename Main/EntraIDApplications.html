@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Entra ID Applications</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body onload="initTheme()">
+<header>
+  <div style="display: flex; align-items: center; gap: 15px;">
+    <button onclick="goBack()" class="back-button">⬅️ Back</button>
+    <div class="logo-title">
+      <img src="../Pictures/contoso.png" alt="Logo">
+      <div class="title-block">
+        <div class="env-name">Demo environment</div>
+        <div class="page-name">Entra ID Applications</div>
+      </div>
+    </div>
+  </div>
+  <div class="icon-bar">
+    <span class="theme-toggle" onclick="toggleTheme()">🌓</span>
+  </div>
+</header>
+
+<div class="page-container">
+  <div id="appCounters" class="indicator-bar"></div>
+
+  <div class="filters">
+    <input id="tableSearch" type="text" placeholder="🔍 Search..." onkeyup="filterTable()" class="search" />
+    <select id="statusFilter" onchange="filterTable()" class="dropdown">
+      <option value="all">All</option>
+      <option value="expired">Expired</option>
+      <option value="expiring">Expiring (≤ 30 days)</option>
+    </select>
+  </div>
+
+  <table id="dataTable" class="styled-table">
+    <thead>
+      <tr>
+        <th onclick="sortTable(0)">AppDisplayName</th>
+        <th onclick="sortTable(1)">AppId</th>
+        <th onclick="sortTable(2)">KeyType</th>
+        <th onclick="sortTable(3)">ExpirationDate</th>
+        <th onclick="sortTable(4)">DaysUntilExpiration</th>
+        <th onclick="sortTable(5)"></th>
+      </tr>
+    </thead>
+    <tbody id="appsBody"></tbody>
+  </table>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="common.js"></script>
+
+<script>
+async function loadCsvAndRender() {
+const baseUrl = 'https://dscshow.blob.core.windows.net/priv';
+const csvPath = 'data/Get-EntraIDAppsReport/Get-EntraIDAppsReport_latest.csv';
+const sas = ''; // keep same structure, empty if public
+const fullUrl = `${baseUrl}/${csvPath}${sas}`;
+
+  try {
+    const res = await fetch(fullUrl);
+    const csv = await res.text();
+    const { data } = Papa.parse(csv, {
+      header: true,
+      dynamicTyping: true,
+      delimiter: ';',
+      skipEmptyLines: true
+    });
+
+    const tbody = document.getElementById('appsBody');
+    tbody.innerHTML = '';
+    let expired = 0, expiring = 0, total = 0;
+
+    data.forEach(row => {
+      if (!row.AppDisplayName) return;
+      const tr = document.createElement('tr');
+      const td = html => { const c = document.createElement('td'); c.innerHTML = html; return c; };
+
+      const link = `https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/CallAnAPI/appId/${row.AppId}/isMSAApp~/false`;
+      tr.appendChild(Object.assign(document.createElement('td'), {
+        className: 'apps-entry',
+        innerHTML: `<a href="${link}" target="_blank" rel="noopener noreferrer">${row.AppDisplayName}</a>`
+      }));
+      tr.appendChild(td(row.AppId));
+      tr.appendChild(td(row.KeyType));
+
+      const match = row.ExpirationDate ? row.ExpirationDate.match(/\d+/g) : null;
+      if (match) {
+        const [d, m, y, hh=0, mm=0, ss=0] = match.map(Number);
+        tr.appendChild(td(new Date(y, m-1, d, hh, mm, ss).toLocaleString('fr-FR')));
+      } else {
+        tr.appendChild(td(row.ExpirationDate || ''));
+      }
+
+      let du = row.DaysUntilExpiration, emoji = '', color = '';
+      if (du <= 0) { color = 'gray'; emoji = '💥'; expired++; }
+      else if (du <= 3) { color = 'red'; emoji = '🚨'; expiring++; }
+      else if (du <= 30) { color = 'orange'; emoji = '⚠️'; expiring++; }
+      tr.appendChild(td(`<b style="color:${color};">${du}</b>`));
+      tr.appendChild(td(`<span style="font-size:2em;">${emoji}</span>`));
+
+      tr.dataset.du = du;
+      tbody.appendChild(tr);
+      total++;
+    });
+
+    updateCounterBar(expired, expiring, total);
+  } catch (err) {
+    console.error('CSV load error', err);
+  }
+}
+
+window.addEventListener('load', loadCsvAndRender);
+</script>
+<div id="footer-placeholder"></div>
+</body>
+</html>

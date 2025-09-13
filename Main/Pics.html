@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Custom Design</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+
+<body onload="initTheme()">
+<header>
+  <div style="display: flex; align-items: center; gap: 15px;">
+    <button onclick="goBack()" class="back-button">⬅️ Back</button>
+    <div class="logo-title">
+      <img src="../Pictures/contoso.png" alt="Logo">
+      <div class="title-block">
+        <div class="env-name">Demo environment</div>
+        <div class="page-name">Custom Design</div>
+      </div>
+    </div>
+  </div>
+  <div class="icon-bar">
+    <span class="theme-toggle" onclick="toggleTheme()">🌓</span>
+  </div>
+</header>
+
+<div class="gallery">
+  <div class="customset">
+		<img src = "../Pictures/raisin/success.png" />
+		<img src = "../Pictures/raisin/failure.png" />
+		<img src = "../Pictures/raisin/warning.png" />
+		<img src = "../Pictures/raisin/notfound.png" />
+		<img src = "../Pictures/raisin/interrupted.png" />
+  </div>
+  <div class="customset">
+		<img src = "../Pictures/car/success.png" />
+		<img src = "../Pictures/car/failure.png" />
+		<img src = "../Pictures/car/warning.png" />
+		<img src = "../Pictures/car/notfound.png" />
+		<img src = "../Pictures/car/interrupted.png" />
+  </div>
+  <div class="customset">
+		<img src = "../Pictures/house/success.png" />
+		<img src = "../Pictures/house/failure.png" />
+		<img src = "../Pictures/house/warning.png" />
+		<img src = "../Pictures/house/notfound.png" />
+		<img src = "../Pictures/house/interrupted.png" />
+  </div>
+  <div class="customset">
+		<img src = "../Pictures/snowman/success.png" />
+		<img src = "../Pictures/snowman/failure.png" />
+		<img src = "../Pictures/snowman/warning.png" />
+		<img src = "../Pictures/snowman/notfound.png" />
+		<img src = "../Pictures/snowman/interrupted.png" />
+  </div>
+	  <div class="customset">
+		<img src = "../Pictures/store/success.png" />
+		<img src = "../Pictures/store/failure.png" />
+		<img src = "../Pictures/store/warning.png" />
+		<img src = "../Pictures/store/notfound.png" />
+		<img src = "../Pictures/store/interrupted.png" />
+  </div>
+	  <div class="customset">
+		<img src = "../Pictures/wallet/success.png" />
+		<img src = "../Pictures/wallet/failure.png" />
+		<img src = "../Pictures/wallet/warning.png" />
+		<img src = "../Pictures/wallet/notfound.png" />
+		<img src = "../Pictures/wallet/interrupted.png" />
+  </div>
+	  <div class="customset">
+		<img src = "../Pictures/christmas/success.png" />
+		<img src = "../Pictures/christmas/failure.png" />
+		<img src = "../Pictures/christmas/warning.png" />
+		<img src = "../Pictures/christmas/notfound.png" />
+		<img src = "../Pictures/christmas/interrupted.png" />
+  </div>
+		  <div class="customset">
+		<img src = "../Pictures/halloween/success.png" />
+		<img src = "../Pictures/halloween/failure.png" />
+		<img src = "../Pictures/halloween/warning.png" />
+		<img src = "../Pictures/halloween/notfound.png" />
+		<img src = "../Pictures/halloween/interrupted.png" />
+  </div>
+		  <div class="customset">
+		<img src = "../Pictures/easter/success.png" />
+		<img src = "../Pictures/easter/failure.png" />
+		<img src = "../Pictures/easter/warning.png" />
+		<img src = "../Pictures/easter/notfound.png" />
+		<img src = "../Pictures/easter/interrupted.png" />
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="common.js"></script> <!-- ✅ contains theme + footer + helpers -->
+
+<script>
+window.addEventListener("pageshow", function () {
+  initTheme();
+});
+</script>
+<div id="footer-placeholder"></div>
+</body>
+</html>
