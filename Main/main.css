@@ -358,29 +358,108 @@ body.light-mode a:hover {
   font-weight: 500;
 }
 
-/* custom design */
+/* custom design page */
 .gallery {
 	margin-top: 20px;
   display: flex;
   flex-direction: column;
   gap: 20px;  /* space between rows */
   align-items: center;
+	padding-bottom: 120px; /* extra space above footer */
 }
 
+/* custom design white box format */
 .customset {
   display: grid;
-  grid-template-columns: repeat(5, 150px); /* 5 icons per row */
+  grid-template-columns: repeat(5, 150px);
   gap: 15px;
   padding: 20px;
-  border: 1px solid var(--border-color); /* border around the group */
+  border: 1px solid var(--border-color);
   border-radius: 12px;
   background: var(--card-bg);
+  width: fit-content;
+  margin: 0 auto;
 }
-
 .customset img {
   width: 150px;
   height: auto;
   border-radius: 8px;   /* optional, for rounded corners on images */
   background: none;     /* no background */
   border: none;         /* remove individual borders */
+}
+
+/* for changing warning and critical colors in table reports */
+.warning {
+  color: orange;
+  font-weight: bold;
+}
+
+.critical {
+  color: red;
+  font-weight: bold;
+}
+
+/* green tick and red cross outside of the white box for custom design */
+.status img {
+  height: 64px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+}
+
+/* wrapper for customset + status */
+.setrow {
+  display: flex;
+  align-items: center;   /* vertical align with the box */
+  gap: 20px;             /* space between the box and the tick/cross */
+}
+
+/* spoiler reveal/hide for custom design events pictures */
+
+.spoiler {
+  flex: 1;    
+}
+
+.spoiler-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+/* Only blur inside event-gallery */
+.event-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;        /* space between rows */
+  align-items: center;
+  padding-bottom: 120px; /* breathing room above footer */
+}
+
+/* Blur effect only for event-gallery */
+.event-gallery:not(.revealed) .spoiler img {
+  filter: blur(15px);
+  transition: filter 0.3s ease;
+}
+
+.event-gallery.revealed .spoiler img {
+  filter: none;
+}
+
+/* Each row = icons + status inline */
+.event-gallery .setrow {
+  display: flex;
+  align-items: center; /* vertical centering */
+  gap: 20px;           /* space between icons and status */
+}
+
+/* Controls row above seasonal sets */
+.event-controls {
+  display: flex;
+  justify-content: center; /* center the button */
+  margin: 20px 0;
 }
