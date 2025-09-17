@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Custom Design</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+
+<body onload="initTheme()">
+<header>
+  <div style="display: flex; align-items: center; gap: 15px;">
+    <button onclick="goBack()" class="back-button">⬅️ Back</button>
+    <div class="logo-title">
+      <img src="Pictures/contoso.png" alt="Logo">
+      <div class="title-block">
+        <div class="env-name">Demo environment</div>
+        <div class="page-name">Custom Design</div>
+      </div>
+    </div>
+  </div>
+  <div class="icon-bar">
+    <span class="theme-toggle" onclick="toggleTheme()">🌓</span>
+  </div>
+</header>
+
+<div class="gallery">
+	<div class="setrow">
+		<div class="customset">
+			<img src = "../Pictures/raisin/success.png" alt="success"/>
+			<img src = "../Pictures/raisin/failure.png" alt="failure"/>
+			<img src = "../Pictures/raisin/warning.png" alt="warning"/>
+			<img src = "../Pictures/raisin/notfound.png"alt="notfound"/>
+			<img src = "../Pictures/raisin/interrupted.png" alt="interrupted"/>
+		</div>
+		<div class="status">
+			<img src="../Pictures/greentick.png" alt="greentick">
+		</div>
+	</div>
+	<div class="setrow">
+		<div class="customset">
+			<img src = "../Pictures/car/success.png" alt="success"/>
+			<img src = "../Pictures/car/failure.png" alt="failure"/>
+			<img src = "../Pictures/car/warning.png" alt="warning"/>
+			<img src = "../Pictures/car/notfound.png" alt="notfound"/>
+			<img src = "../Pictures/car/interrupted.png" alt="interrupted"/>
+		</div>
+		<div class="status">
+			<img src="../Pictures/greentick.png" alt="greentick">
+		</div>
+    </div>
+	<div class="setrow">
+		<div class="customset">
+			<img src = "../Pictures/house/success.png" alt="success"/>
+			<img src = "../Pictures/house/failure.png" alt="failure"/>
+			<img src = "../Pictures/house/warning.png" alt="warning"/>
+			<img src = "../Pictures/house/notfound.png" alt="notfound"/>
+			<img src = "../Pictures/house/interrupted.png" alt="interrupted"/>
+		</div>
+		<div class="status">
+			<img src="../Pictures/pending.png" alt="pending">
+		</div>
+    </div>
+	<div class="setrow">
+		<div class="customset">
+			<img src = "../Pictures/snowman/success.png" alt="success"/>
+			<img src = "../Pictures/snowman/failure.png" alt="failure"/>
+			<img src = "../Pictures/snowman/warning.png" alt="warning"/>
+			<img src = "../Pictures/snowman/notfound.png" alt="notfound"/>
+			<img src = "../Pictures/snowman/interrupted.png" alt="interrupted"/>
+		</div>
+		<div class="status">
+			<img src="../Pictures/greentick.png" alt="greentick">
+		</div>
+    </div>
+	<div class="setrow">
+		<div class="customset">
+			<img src = "../Pictures/store/success.png" alt="success"/>
+			<img src = "../Pictures/store/failure.png" alt="failure"/>
+			<img src = "../Pictures/store/warning.png" alt="warning"/>
+			<img src = "../Pictures/store/notfound.png" alt="notfound"/>
+			<img src = "../Pictures/store/interrupted.png" alt="interrupted"/>
+		</div>
+		<div class="status">
+			<img src="../Pictures/redcross.png" alt="redcross">
+		</div>
+    </div>
+	<div class="setrow">
+		<div class="customset">
+			<img src = "../Pictures/wallet/success.png" alt="success"/>
+			<img src = "../Pictures/wallet/failure.png" alt="failure"/>
+			<img src = "../Pictures/wallet/warning.png" alt="warning"/>
+			<img src = "../Pictures/wallet/notfound.png" alt="notfound"/>
+			<img src = "../Pictures/wallet/interrupted.png" alt="interrupted"/>
+		</div>
+		<div class="status">
+			<img src="../Pictures/pending.png" alt="pending">
+		</div>
+    </div>
+	<div class="setrow">
+		<div class="customset">
+			<img src = "../Pictures/prevention/success.png" alt="success"/>
+			<img src = "../Pictures/prevention/failure.png" alt="failure"/>
+			<img src = "../Pictures/prevention/warning.png" alt="warning"/>
+			<img src = "../Pictures/prevention/notfound.png" alt="notfound"/>
+			<img src = "../Pictures/prevention/interrupted.png" alt="interrupted"/>
+		</div>
+		<div class="status">
+			<img src="../Pictures/interrogationmark.png" alt="interrogationmark.png">
+		</div>
+    </div>
+</div>
+
+<div class="event-controls">
+  <button class="spoiler-btn" onclick="toggleEventSpoilers(this)">Spoiler reveal</button>
+</div>
+
+<div class="event-gallery">
+  <div class="setrow">
+    <div class="spoiler">
+      <div class="customset">
+        <img src="../Pictures/christmas/success.png" alt="success"/>
+        <img src="../Pictures/christmas/failure.png" alt="failure"/>
+        <img src="../Pictures/christmas/warning.png" alt="warning"/>
+        <img src="../Pictures/christmas/notfound.png" alt="notfound"/>
+        <img src="../Pictures/christmas/interrupted.png" alt="interrupted"/>
+      </div>
+    </div>
+    <div class="status"><img src="../Pictures/event.png" alt="event"></div>
+  </div>
+
+  <div class="setrow">
+    <div class="spoiler">
+      <div class="customset">
+        <img src="../Pictures/halloween/success.png" alt="success"/>
+        <img src="../Pictures/halloween/failure.png" alt="failure"/>
+        <img src="../Pictures/halloween/warning.png" alt="warning"/>
+        <img src="../Pictures/halloween/notfound.png" alt="notfound"/>
+        <img src="../Pictures/halloween/interrupted.png" alt="interrupted"/>
+      </div>
+    </div>
+    <div class="status"><img src="../Pictures/event.png" alt="event"></div>
+  </div>
+
+  <div class="setrow">
+    <div class="spoiler">
+      <div class="customset">
+        <img src="../Pictures/easter/success.png" alt="success"/>
+        <img src="../Pictures/easter/failure.png" alt="failure"/>
+        <img src="../Pictures/easter/warning.png" alt="warning"/>
+        <img src="../Pictures/easter/notfound.png" alt="notfound"/>
+        <img src="../Pictures/easter/interrupted.png" alt="interrupted"/>
+      </div>
+    </div>
+    <div class="status"><img src="../Pictures/event.png" alt="event"></div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="common.js"></script> <!-- ✅ contains theme + footer + helpers -->
+
+<script>
+function toggleEventSpoilers(button) {
+  const gallery = document.querySelector('.event-gallery');
+  gallery.classList.toggle('revealed');
+  button.textContent = gallery.classList.contains('revealed')
+    ? "Spoiler hide"
+    : "Spoiler reveal";
+}
+
+window.addEventListener("pageshow", function () {
+  initTheme();
+});
+</script>
+<div id="footer-placeholder"></div>
+</body>
+</html>
