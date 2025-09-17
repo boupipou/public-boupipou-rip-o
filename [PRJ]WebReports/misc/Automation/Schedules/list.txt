@@ -1,0 +1,8 @@
+Daily-4am : recurring
+linked to : New-SasTokenAZRoleAssignments,New-SasTokenForEntraIDAppsReport
+
+Daily-5am : recurring
+linked to : Import-FilesIntoWebApp
+
+Weekly-Monday-8am : recurring
+linked to : technical scripts for reports

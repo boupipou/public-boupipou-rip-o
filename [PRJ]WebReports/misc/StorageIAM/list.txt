@@ -1,0 +1,3 @@
+Reader (1) : dsc-prod-fr-automation
+Storage Account Key Operator Service Role (2) : dsc-prod-fr-automation,dsc-prod-fr-webapp
+Storage Blob Data Contributor (3) : adminaccount@contoso.com,dsc-prod-fr-automation,dsc-prod-fr-webapp
