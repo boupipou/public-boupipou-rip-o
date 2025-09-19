@@ -1,0 +1,465 @@
+:root {
+    --bg-color: #1e1e1e;
+    --text-color: #f0f0f0;
+    --header-bg: #2d2d2d;
+    --card-bg: #2c2c2c;
+    --border-color: #444;
+    --accent-color: #0078d7; /* Microsoft Blue */
+}
+
+body.light-mode {
+    --bg-color: #ffffff;
+    --text-color: #1e1e1e;
+    --header-bg: #f5f5f5;
+    --card-bg: #ffffff;
+    --border-color: #ccc;
+}
+
+body {
+    margin: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+}
+
+/* HEADER */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: var(--header-bg);
+    border-bottom: 1px solid var(--border-color);
+    position: relative;
+}
+
+header h2 {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    font-size: 1.2em;
+    color: var(--text-color);
+}
+
+.back-button {
+    padding: 10px 15px;
+    font-size: 0.9em;
+    margin-right: 20px;
+    border-radius: 5px;
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    cursor: pointer;
+}
+
+.icon-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.theme-toggle {
+    cursor: pointer;
+    font-size: 1.2em;
+}
+
+/* SEARCH BAR */
+.search {
+    margin: 20px auto;
+    display: block;
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-color);
+    width: 250px;
+}
+
+/* GRID */
+.set {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 50px 60px;
+    justify-content: center;
+    padding: 40px;
+    border-radius: 12px;
+    background: var(--card-bg);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    position: relative;
+}
+
+/* vertical separators */
+.set::before,
+.set::after {
+      content: "";
+      position: absolute;
+      top: 10%;
+      bottom: 10%;
+      width: 1px;
+      background: rgba(255,255,255,0.1); /* dark theme */
+}
+
+body.light-mode .set::before,
+body.light-mode .set::after {
+    background: rgba(0,0,0,0.1); /* light theme */
+}
+
+.set::before { left: 33.33%; }
+ .set::after { left: 66.66%; }
+
+    /* LOGO ITEMS */
+.logo-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      text-decoration: none;
+      color: var(--text-color);
+      padding: 10px;
+      border-radius: 8px;
+      transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.logo-item:hover {
+      background: rgba(0,120,215,0.08);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transform: scale(1.05);
+}
+
+.logo-item:active {
+      transform: scale(0.97);
+}
+
+.logo-item:focus {
+      outline: 2px solid var(--accent-color);
+      outline-offset: 4px;
+}
+
+.logo-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--text-color);
+}
+
+.logo-title img {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border-color);
+}
+
+.title-block {
+  display: flex;
+  flex-direction: column;
+}
+
+.env-name {
+  font-size: 1.1em;
+  font-weight: 600;
+}
+
+.page-name {
+  font-size: 0.9em;
+  font-weight: 400;
+  opacity: 0.8;
+}
+
+.icon-box {
+      width: 64px;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+
+.icon-box img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+.logo-item span {
+      font-size: 0.9em;
+      text-align: center;
+      line-height: 1.3em;
+      max-width: 120px;
+      white-space: normal;
+}
+
+/* PAGE CONTAINER */
+.page-container {
+  padding: 20px 40px 40px;
+}
+
+/* COUNTER BAR */
+.indicator-bar {
+  margin-bottom: 15px;
+  font-weight: 500;
+  font-size: 0.95em;
+  color: var(--text-color);
+  opacity: 0.9;
+}
+
+/* FILTERS (search + dropdown inline) */
+.filters {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.filters .search {
+  margin: 0;
+  flex: 0 0 250px;
+}
+
+.dropdown {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+}
+
+/* TABLE */
+.styled-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.styled-table th,
+.styled-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border-color);
+  text-align: left;
+  font-size: 0.9em;
+}
+
+.styled-table th {
+  background: var(--header-bg);
+  cursor: pointer;
+  user-select: none;
+}
+
+.styled-table tr:hover td {
+  background: rgba(0, 120, 215, 0.08);
+}
+
+/* footer that never moves */
+footer{
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	background: var(--header-bg);
+	color: var(--text-color);
+	border-top: 1px solid var(--border-color);
+	text-align: center;
+	padding: 12px 16px;
+	font-size: .85em;
+	z-index: 999;       /* stays above cards or tables */
+}
+
+/* Links inside tables */
+a {
+  color: #4da6ff;   /* bright azure blue for dark mode */
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: #66b3ff;   /* even lighter on hover */
+  text-decoration: underline;
+}
+
+/* Light mode override */
+body.light-mode a {
+  color: #005a9e;   /* darker blue for visibility on white background */
+}
+
+body.light-mode a:hover {
+  color: #0078d7;   /* Microsoft blue on hover */
+}
+
+/* ROADMAP PAGE SPECIFIC */
+.filter-bar {
+  padding: 20px;
+  display: flex;
+  gap: 30px;           /* space between filters */
+  flex-wrap: wrap;
+  align-items: center; /* vertical alignment */
+}
+
+.filter-bar select {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  padding: 8px 12px;
+  border: 1px solid var(--border-color);
+  border-radius: 5px;
+}
+
+.container {
+  padding: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+
+.roadmap-entry {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  transition: transform 0.2s, background-color 0.2s;
+}
+
+.roadmap-entry:hover {
+  transform: translateY(-3px);
+  background-color: var(--card-hover);
+}
+
+.roadmap-entry h3 {
+  margin-top: 0;
+  font-size: 1.3em;
+  color: var(--link-color);
+}
+
+.roadmap-entry p {
+  margin: 5px 0;
+  font-size: 0.95em;
+}
+
+.roadmap-entry a {
+  color: var(--link-color);
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.roadmap-entry a:hover {
+  text-decoration: underline;
+}
+
+.filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;            /* space between label and dropdown */
+}
+
+.filter label {
+  font-weight: 500;
+}
+
+/* custom design page */
+.gallery {
+	margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;  /* space between rows */
+  align-items: center;
+	padding-bottom: 120px; /* extra space above footer */
+}
+
+/* custom design white box format */
+.customset {
+  display: grid;
+  grid-template-columns: repeat(5, 150px);
+  gap: 15px;
+  padding: 20px;
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  background: var(--card-bg);
+  width: fit-content;
+  margin: 0 auto;
+}
+.customset img {
+  width: 150px;
+  height: auto;
+  border-radius: 8px;   /* optional, for rounded corners on images */
+  background: none;     /* no background */
+  border: none;         /* remove individual borders */
+}
+
+/* for changing warning and critical colors in table reports */
+.warning {
+  color: orange;
+  font-weight: bold;
+}
+
+.critical {
+  color: red;
+  font-weight: bold;
+}
+
+/* green tick and red cross outside of the white box for custom design */
+.status img {
+  height: 64px;
+}
+
+.status {
+  display: flex;
+  align-items: center;
+}
+
+/* wrapper for customset + status */
+.setrow {
+  display: flex;
+  align-items: center;   /* vertical align with the box */
+  gap: 20px;             /* space between the box and the tick/cross */
+}
+
+/* spoiler reveal/hide for custom design events pictures */
+
+.spoiler {
+  flex: 1;    
+}
+
+.spoiler-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: var(--card-bg);
+  color: var(--text-color);
+  cursor: pointer;
+}
+
+/* Only blur inside event-gallery */
+.event-gallery {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;        /* space between rows */
+  align-items: center;
+  padding-bottom: 120px; /* breathing room above footer */
+}
+
+/* Blur effect only for event-gallery */
+.event-gallery:not(.revealed) .spoiler img {
+  filter: blur(15px);
+  transition: filter 0.3s ease;
+}
+
+.event-gallery.revealed .spoiler img {
+  filter: none;
+}
+
+/* Each row = icons + status inline */
+.event-gallery .setrow {
+  display: flex;
+  align-items: center; /* vertical centering */
+  gap: 20px;           /* space between icons and status */
+}
+
+/* Controls row above seasonal sets */
+.event-controls {
+  display: flex;
+  justify-content: center; /* center the button */
+  margin: 20px 0;
+}

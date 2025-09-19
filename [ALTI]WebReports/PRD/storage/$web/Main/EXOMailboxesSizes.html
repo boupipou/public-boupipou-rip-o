@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Mailboxes sizes</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+
+<body onload="initTheme()">
+<header>
+  <div style="display: flex; align-items: center; gap: 15px;">
+    <button onclick="goBack()" class="back-button">⬅️ Back</button>
+    <div class="logo-title">
+      <img src="Pictures/logo.jpg" alt="Logo">
+      <div class="title-block">
+        <div class="env-name">ALTISERVICE</div>
+        <div class="page-name">Mailboxes Sizes</div>
+      </div>
+    </div>
+  </div>
+  <div class="icon-bar">
+    <span class="theme-toggle" onclick="toggleTheme()">🌓</span>
+  </div>
+</header>
+
+<div class="page-container">
+  <!-- Counter bar -->
+  <div id="mbsizeCounters" class="indicator-bar"></div>
+
+  <!-- Filters -->
+  <div class="filters">
+    <input id="tableSearch" type="text" placeholder="🔍 Search..."
+           onkeyup="filterTable()" class="search" />
+  </div>
+
+  <!-- Table -->
+  <table class="styled-table">
+    <thead>
+      <tr>
+        <th onclick="sortTable(0)">UserPrincipalName</th>
+        <th onclick="sortTable(1)">RecipientTypeDetails</th>
+				<th onclick="sortTable(2)">MailboxSizePercentFree(%)</th>
+				<th onclick="sortTable(3)">MailboxSizeThreshold</th>
+				<th onclick="sortTable(4)">RecoverableItemsSizeThreshold</th>
+				<th onclick="sortTable(5)">DeletedItemsThreshold</th>
+				<th onclick="sortTable(6)">ArchiveStatus</th>
+				<th onclick="sortTable(7)">AutoExpandingArchiveEnabled</th>
+        <!-- add/remove as needed -->
+      </tr>
+    </thead>
+    <tbody id="mbsizeBody"></tbody>
+  </table>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+<script src="common.js"></script> <!-- ✅ contains theme + footer + helpers -->
+
+<script>
+/* ---------------- CSV loader ---------------- */
+async function loadCsv() {
+  const baseUrl = 'https://altifrcprdwebreportsstg.z28.web.core.windows.net/priv';
+  const csvPath = 'data/Get-MailboxesSizes/Get-MailboxesSizes_latest.csv';   // 🔹 change this
+  const res = await fetch(`${baseUrl}/${csvPath}`);
+  const txt = await res.text();
+  const parsed = Papa.parse(txt, {
+    header: true,
+    dynamicTyping: true,
+    delimiter: ';',
+    skipEmptyLines: true
+  });
+  csvData = parsed.data;
+  renderTable(csvData);
+}
+
+/* ---------------- table render ---------------- */
+function renderTable(rows) {
+  const tbody = document.getElementById('mbsizeBody');
+  tbody.innerHTML = '';
+  rows.forEach(r => {
+    const tr = document.createElement('tr');
+    ['UserPrincipalName','RecipientTypeDetails','MailboxSizePercentFree(%)','MailboxSizeThreshold','RecoverableItemsSizeThreshold','DeletedItemsThreshold','ArchiveStatus','AutoExpandingArchiveEnabled'].forEach(k => {
+  const td = document.createElement('td');
+  td.textContent = r[k] ?? '';
+
+  // highlight Warning / Critical
+  if (k === 'MailboxSizeThreshold') {
+    if (String(r[k]).toLowerCase() === 'warning') {
+      td.classList.add('warning');
+    }
+    if (String(r[k]).toLowerCase() === 'critical') {
+      td.classList.add('critical');
+    }
+  }
+
+	if (k === 'RecoverableItemsSizeThreshold') {
+    if (String(r[k]).toLowerCase() === 'warning') {
+      td.classList.add('warning');
+    }
+    if (String(r[k]).toLowerCase() === 'critical') {
+      td.classList.add('critical');
+    }
+  }
+
+	if (k === 'DeletedItemsThreshold') {
+    if (String(r[k]).toLowerCase() === 'warning') {
+      td.classList.add('warning');
+    }
+    if (String(r[k]).toLowerCase() === 'critical') {
+      td.classList.add('critical');
+    }
+  }
+	
+  tr.appendChild(td);
+});
+    tbody.appendChild(tr);
+  });
+  showCounters(rows);
+}
+
+/* ---------------- counters ---------------- */
+function showCounters(rows) {
+  const total = rows.length;
+  document.getElementById('mbsizeCounters').textContent =
+    `Total rows: ${total}`;
+}
+
+/* ---------------- filters ---------------- */
+function filterTable() {
+  const q = document.getElementById('tableSearch').value.toLowerCase();
+  const rows = [...document.querySelectorAll('#mbsizeBody tr')];
+  const visible = rows.filter(r => r.textContent.toLowerCase().includes(q));
+  rows.forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+  showCounters(visible.map(r => {
+    return {}; // 🔹 adapt if you want smarter counters
+  }));
+}
+
+/* ---------------- sorting ---------------- */
+function sortTable(idx) {
+  const tbody = document.getElementById('mbsizeBody');
+  const table = tbody.parentElement.parentElement;
+  const rows = [...tbody.rows];
+  const asc = table.dataset.sortColumn == idx && table.dataset.sortOrder !== 'desc';
+  table.dataset.sortColumn = idx;
+  table.dataset.sortOrder = asc ? 'desc' : 'asc';
+  table.querySelectorAll('th').forEach((th,i) => {
+    const base = th.textContent.replace(/[⬆️⬇️]/g,'').trim();
+    th.textContent = base + (i === idx ? (asc ? ' ⬆️' : ' ⬇️') : '');
+  });
+  rows.sort((a,b) => {
+    const A = a.cells[idx].textContent.toLowerCase();
+    const B = b.cells[idx].textContent.toLowerCase();
+    if(!isNaN(A) && !isNaN(B)) return asc ? A-B : B-A;
+    return asc ? A.localeCompare(B) : B.localeCompare(A);
+  }).forEach(r => tbody.appendChild(r));
+}
+
+/* ---------------- boot ---------------- */
+window.addEventListener('load', loadCsv);
+</script>
+<div id="footer-placeholder"></div>
+</body>
+</html>

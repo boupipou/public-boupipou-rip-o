@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Main Menu</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body onload="initTheme()">
+
+  <header>
+  <!-- Left: Back button -->
+  <div style="display: flex; align-items: center; gap: 15px;">
+    <button onclick="goBack()" class="back-button">⬅️ Back</button>
+
+    <!-- Logo + environment + page title -->
+    <div class="logo-title">
+      <img src="Pictures/logo.jpg" alt="Logo">
+      <div class="title-block">
+        <div class="env-name">ALTISERVICE</div>
+        <div class="page-name">Main Page</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: theme toggle -->
+  <div class="icon-bar">
+    <span class="theme-toggle" onclick="toggleTheme()">🌓</span>
+  </div>
+</header>
+
+  <!-- Search -->
+  <input type="text" placeholder="Search…" class="search" onkeyup="filterIcons()">
+
+  <!-- Grid -->
+  <div class="set" id="iconGrid">
+    <a href="EXOMailboxesSizes.html" class="logo-item"><div class="icon-box"><img src="Pictures/mailboxessizes.png"></div><span>Mailboxes sizes</span></a>
+  </div>
+
+<div id="footer-placeholder"></div>
+<script>
+// Footer
+  (async () => {
+    try {
+      const resp = await fetch('footer.html');           // path to your footer
+      const html = await resp.text();
+      document.getElementById('footer-placeholder').innerHTML = html;
+    } catch (err) {
+      console.error('Cannot load footer:', err);
+    }
+  })();
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light') document.body.classList.add('light-mode');
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle('light-mode');
+      localStorage.setItem('theme',
+        document.body.classList.contains('light-mode') ? 'light' : 'dark'
+      );
+    }
+
+    function goBack() {
+      if (window.history.length > 1) window.history.back();
+      else window.location.href = 'index.html';
+    }
+
+    // Live search
+    function filterIcons() {
+      const query = document.querySelector(".search").value.toLowerCase();
+      document.querySelectorAll("#iconGrid .logo-item").forEach(item => {
+        const text = item.innerText.toLowerCase();
+        item.style.display = text.includes(query) ? "flex" : "none";
+      });
+    }
+  </script>
+</body>
+</html>

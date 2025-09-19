@@ -1,0 +1,14 @@
+runbooks : 
+-remplacer les "[OK/DEBUG/ERROR] : blabla : {0} blibli" -f $var par Write-Output
+-ajouter les [OK/DEBUG/ERROR] manquants
+-ajouter date de début job : $JobStart = Get-Date; Write-Output "Job start : $JobStart"
+-ajouter date fin job : $JobEnd = Get-Date; Write-Output "Job end : $JobEnd"
+-ajouter temps total job : $JobDuration = "$([math]::Round($(New-TimeSpan -Start $JobStart -End $JobEnd | select -ExpandProperty TotalMinutes))) mn"
+
+pages html : 
+-ajouter date de dernier rafraichissement rapports
+-ajouter bouton pour rafraichir les données
+-report AZAssignments : phrase explicative sur la dissociation dans rapport IAM Azure management group / sub
+-report MailboxesSizes : modifier Archive par Archive size ou None
+-modifier le nom des pages pour ajouter un service associé en préfixe : AAD/EXO/SPO ... pour pouvoir grouper par service sur la page d'accueil par exemple
+-

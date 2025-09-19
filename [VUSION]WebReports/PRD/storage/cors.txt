@@ -1,0 +1,1 @@
+https://supitifrcprdstomonibkp01.z28.web.core.windows.net GET * * 3600

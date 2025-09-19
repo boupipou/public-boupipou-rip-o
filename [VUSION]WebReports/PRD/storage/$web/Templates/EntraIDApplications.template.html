@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Entra ID Applications</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+<body onload="initTheme()">
+  <header>
+    <div style="display:flex;align-items:center;">
+      <button class="back-button" onclick="goBack()">⬅️ Back</button>
+      <h1 style="flex:1;margin:0 auto;font-size:1.2em;font-weight:normal;text-align:center;">
+        <img src="Pictures/logo.jpg" class="resized-img" />
+        <span style="padding-left:30px;">VUSION GROUP</span>
+      </h1>
+    </div>
+    <h2 style="flex:1;margin:0 auto;font-size:1.2em;text-align:center;">Entra ID Applications</h2>
+    <div class="icon-bar"><span class="theme-toggle" onclick="toggleTheme()">🌓</span></div>
+  </header>
+
+  <div style="padding:20px 40px 40px;">
+    <!-- compact counter bar -->
+    <div id="appCounters" class="indicator-bar"></div>
+
+    <input id="tableSearch" type="text" placeholder="🔍 Search..." onkeyup="filterTable()"
+      style="margin-bottom:20px;padding:10px;width:300px;border-radius:6px;border:1px solid var(--border-color);background:var(--card-bg);color:var(--text-color);" />
+
+    <!-- NEW status filter dropdown -->
+    <select id="statusFilter" onchange="filterTable()"
+      style="margin-left:10px;padding:10px;border-radius:6px;border:1px solid var(--border-color);background:var(--card-bg);color:var(--text-color);">
+      <option value="all">All</option>
+      <option value="expired">Expired</option>
+      <option value="expiring">Expiring (≤ 30 days)</option>
+    </select>
+
+    <table style="width:55%;">
+      <thead>
+        <tr>
+          <th style="width:10%;" onclick="sortTable(0)">AppDisplayName</th>
+          <th style="width:10%;" onclick="sortTable(1)">AppId</th>
+          <th style="width:10%;" onclick="sortTable(2)">KeyType</th>
+          <th style="width:10%;" onclick="sortTable(3)">ExpirationDate</th>
+          <th style="width:10%;" onclick="sortTable(4)">DaysUntilExpiration</th>
+          <th style="width:5%;"  onclick="sortTable(5)"></th>
+        </tr>
+      </thead>
+      <tbody id="appsBody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    function initTheme(){if(localStorage.getItem('theme')==='light')document.body.classList.add('light-mode');}
+    function toggleTheme(){document.body.classList.toggle('light-mode');localStorage.setItem('theme',document.body.classList.contains('light-mode')?'light':'dark');}
+    function goBack(){window.history.length>1?window.history.back():location.href='index.html';}
+    window.addEventListener('pageshow',initTheme);
+  </script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+<div id="footer-placeholder"></div>
+<script>
+// Footer
+  (async () => {
+    try {
+      const resp = await fetch('footer.html');           // path to your footer
+      const html = await resp.text();
+      document.getElementById('footer-placeholder').innerHTML = html;
+    } catch (err) {
+      console.error('Cannot load footer:', err);
+    }
+  })();
+	
+    /* ---------- helper to build the indicator text ---------- */
+    function updateCounterBar(expired,expiring,total){
+      document.getElementById('appCounters').textContent=
+        `Expired : ${expired} – Expiring : ${expiring} – Total apps : ${total}`;
+    }
+
+    /* ---------- CSV loader ---------- */
+    async function loadCsvAndRender(){
+      const baseUrl="https://supitifrcprdstomonibkp01.blob.core.windows.net/priv";
+      const csvPath='data/Get-EntraIDAppsReport/Get-EntraIDAppsReport_latest.csv';
+      const sas='<sas>'; // replaced by runbook
+      const fullUrl=`${baseUrl}/${csvPath}${sas}`;
+
+      try{
+        const res=await fetch(fullUrl);
+        const csv=await res.text();
+        const {data}=Papa.parse(csv,{header:true,dynamicTyping:true,delimiter:';',skipEmptyLines:true});
+
+        const tbody=document.getElementById('appsBody');
+        tbody.innerHTML='';
+        let expired=0,expiring=0,total=0;
+
+        data.forEach(row=>{
+          if(!row.AppDisplayName) return;
+          const tr=document.createElement('tr');
+          const td=html=>{const c=document.createElement('td');c.innerHTML=html;return c;};
+          const link=`https://entra.microsoft.com/#view/Microsoft_AAD_RegisteredApps/ApplicationMenuBlade/~/CallAnAPI/appId/${row.AppId}/isMSAApp~/false`;
+          tr.appendChild(Object.assign(document.createElement('td'),{className:'apps-entry',innerHTML:`<a href="${link}" target="_blank" rel="noopener noreferrer">${row.AppDisplayName}</a>`}));
+          tr.appendChild(td(row.AppId));
+          tr.appendChild(td(row.KeyType));
+
+          const match=row.ExpirationDate?row.ExpirationDate.match(/\d+/g):null;
+          if(match){const [d,m,y,hh=0,mm=0,ss=0]=match.map(Number);tr.appendChild(td(new Date(y,m-1,d,hh,mm,ss).toLocaleString('fr-FR')));}else{tr.appendChild(td(row.ExpirationDate||''));}
+
+          let du=row.DaysUntilExpiration,emoji='',color='';
+          if(du<=0){color='gray';emoji='💥';expired++;}
+          else if(du<=3){color='red';emoji='🚨';expiring++;}
+          else if(du<=30){color='orange';emoji='⚠️';expiring++;}
+          tr.appendChild(td(`<b style="color:${color};">${du}</b>`));
+          tr.appendChild(td(`<span style="font-size:2em;">${emoji}</span>`));
+
+          // expose value for fast filtering later
+          tr.dataset.du = du;
+
+          tbody.appendChild(tr);
+          total++;
+        });
+        updateCounterBar(expired,expiring,total);
+      }catch(err){console.error('CSV load error',err);}
+    }
+
+    /* ---------- visible row counter (search/filter) ---------- */
+    function recountVisible(){
+      const rows=[...document.querySelectorAll('#appsBody tr')].filter(r=>r.style.display!=='none');
+      let expired=0,expiring=0,total=rows.length;
+      rows.forEach(r=>{const du=parseInt(r.dataset.du,10);if(du<=0)expired++;else if(du<=30)expiring++;});
+      updateCounterBar(expired,expiring,total);
+    }
+
+    /* ---------- sort + filter helpers ---------- */
+    function sortTable(idx){
+      const table=document.querySelector('table');
+      const tbody=table.tBodies[0];
+      const rows=[...tbody.querySelectorAll('tr')];
+      const asc=table.dataset.sortColumn==idx&&table.dataset.sortOrder!=='desc';
+      table.dataset.sortColumn=idx;table.dataset.sortOrder=asc?'desc':'asc';
+      table.querySelectorAll('th').forEach((th,i)=>{th.textContent=th.textContent.replace(/[ ⬆️⬇️]+$/,'');if(i===idx)th.textContent+=asc?' ⬆️':' ⬇️';});
+      rows.sort((a,b)=>{const A=a.cells[idx].innerText.trim().toLowerCase();const B=b.cells[idx].innerText.trim().toLowerCase();if(!isNaN(A)&&!isNaN(B))return asc?A-B:B-A;return asc?A.localeCompare(B):B.localeCompare(A);});
+      rows.forEach(r=>tbody.appendChild(r));
+      recountVisible();
+    }
+
+    function filterTable(){
+      const search=document.getElementById('tableSearch').value.toLowerCase();
+      const status=document.getElementById('statusFilter').value;
+
+      document.querySelectorAll('#appsBody tr').forEach(row=>{
+        const textMatch=row.innerText.toLowerCase().includes(search);
+        const du=parseInt(row.dataset.du,10);
+        let statusMatch=true;
+        if(status==='expired')statusMatch=du<=0;
+        else if(status==='expiring')statusMatch=du>0&&du<=30;
+        row.style.display=(textMatch&&statusMatch)?'':'none';
+      });
+
+      recountVisible();
+    }
+
+    window.addEventListener('load',loadCsvAndRender);
+  </script>
+</body>
+</html>
