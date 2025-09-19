@@ -39,13 +39,12 @@
       <tr>
         <th onclick="sortTable(0)">UserPrincipalName</th>
         <th onclick="sortTable(1)">RecipientTypeDetails</th>
-				<th onclick="sortTable(2)">MailboxSizePercentFree(%)</th>
+				<th onclick="sortTable(2)">MailboxSizePercentFree</th>
 				<th onclick="sortTable(3)">MailboxSizeThreshold</th>
 				<th onclick="sortTable(4)">RecoverableItemsSizeThreshold</th>
 				<th onclick="sortTable(5)">DeletedItemsThreshold</th>
 				<th onclick="sortTable(6)">ArchiveSize</th>
 				<th onclick="sortTable(7)">AutoExpandingArchiveEnabled</th>
-        <!-- add/remove as needed -->
       </tr>
     </thead>
     <tbody id="mbsizeBody"></tbody>
@@ -58,7 +57,7 @@
 <script>
 /* ---------------- CSV loader ---------------- */
 async function loadCsv() {
-  const baseUrl = 'https://altifrcprdwebreportsstg.z28.web.core.windows.net/priv';
+  const baseUrl = 'https://altifrcprdwebreportsstg.blob.core.windows.net/priv';
   const csvPath = 'data/Get-MailboxesSizes/Get-MailboxesSizes_latest.csv';
 	const sas='<sas>'; // replaced by runbook
   const res = await fetch(`${baseUrl}/${csvPath}${sas}`);
@@ -67,7 +66,9 @@ async function loadCsv() {
     header:true,dynamicTyping:true,delimiter:';',skipEmptyLines:true,
     transformHeader:h=>h.trim().replace(/^"|"$/g,'')
   });
+	console.log(parsed.meta.fields); // 👈 shows all detected column names
   csvData = parsed.data;
+	renderTable(csvData);
 }
 
 /* ---------------- table render ---------------- */
@@ -76,7 +77,7 @@ function renderTable(rows) {
   tbody.innerHTML = '';
   rows.forEach(r => {
     const tr = document.createElement('tr');
-    ['UserPrincipalName','RecipientTypeDetails','MailboxSizePercentFree(%)','MailboxSizeThreshold','RecoverableItemsSizeThreshold','DeletedItemsThreshold','ArchiveSize','AutoExpandingArchiveEnabled'].forEach(k => {
+    ['UserPrincipalName', 'RecipientTypeDetails', 'MailboxSizePercentFree', 'MailboxSizeThreshold', 'RecoverableItemsSizeThreshold', 'DeletedItemsThreshold', 'ArchiveSize', 'AutoExpandingArchiveEnabled'].forEach(k => {
   const td = document.createElement('td');
   td.textContent = r[k] ?? '';
 
@@ -161,3 +162,4 @@ window.addEventListener('load', loadCsv);
 <div id="footer-placeholder"></div>
 </body>
 </html>
+

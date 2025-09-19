@@ -8,21 +8,29 @@ if($DebugEnabled) {
 } else { 
 	$Debug = $false 
 }
-if($Debug) { "[DEBUG] : Debug : $Debug" }
+if($Debug) { Write-Output "[DEBUG] : Debug : $Debug" }
+
+<#Add Exchange permissions to Automation account
+
+#>
+
+$JobStart = Get-Date
+Write-Output "Jobstart : $($JobStart)"
 
 #Force runbook to use correct modules
 Import-Module Az.Accounts
 Import-Module Az.Storage
 Import-Module Az.Resources
+Import-Module ExchangeOnlineManagement
 
 #Debug Step: Log loaded assemblies
-if($Debug) { "[DEBUG] : $([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.FullName -like `"*Azure*`" } | Select FullName, Location)" }
+if($Debug) { Write-Output "[DEBUG] : $([AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.FullName -like `"*Azure*`" } | Select FullName, Location)" }
 
 #Export location
 $ScriptLocation = $env:TEMP	
 
 #$Script name
-$ScriptName = "Get-AZRoleAssignments"
+$ScriptName = "Get-MailboxesSizes"
 
 $Data = @()
 $Report = @()
@@ -52,168 +60,244 @@ $BlobNameReportCurrent = "data/$ScriptName/$ReportFileCurrent"
 #Connection to Azure Storage using managed identity
 try {
     Connect-AzAccount -Identity -ErrorAction Stop
-    if($Debug) { "[DEBUG] : Connected to Az service" }
+    if($Debug) { Write-Output "[DEBUG] : Connected to Az service" }
 } catch {
-    "[ERROR] : Fail to connect to Az service : {0}" -f $_.Exception[0].Message
+    Write-Output "[ERROR] : Fail to connect to Az service : $($_.Exception[0].Message)"
+	break
+}
+
+#Entra application to log on
+$ApplicationID = "0a4f8db8-b596-4b79-b30e-dee35456a934" #Azure-MailboxesSizes app
+$TenantName = "altiservice.com"
+$cert = Get-AutomationCertificate -Name 'M365DSCEncryptionCert' #pfx
+#Exchange.ManageAsApp + Global Reader
+
+try {
+	Connect-ExchangeOnline -AppId $ApplicationID -Organization $TenantName -Certificate $cert -ErrorAction Stop
+	if($Debug) { Write-Output "[OK] : Connected to Exchange Online" }
+} catch {
+	Write-Output "[ERROR] : Fail to run cmdlet 'Connect-ExchangeOnline' : $($_.Exception[0].Message)"
 	break
 }
 
 #Script beginning 
 
-#Retrieve Azure subscriptions
+#Retrieve all mailboxes
 try {
-	$Subscriptions = Get-AzSubscription -ErrorAction Stop
-	if($Debug) { Write-Output "[DEBUG] : AzSubscriptions retrieved" }
+	$Mailboxes = Get-ExoMailbox -ResultSize Unlimited -Properties Guid,UserPrincipalName,ArchiveStatus,ProhibitSendReceiveQuota,UsageLocation,RecipientTypeDetails,AutoExpandingArchiveEnabled -ErrorAction Stop
+	if(!([string]::IsNullOrEmpty($Mailboxes))) {
+		if($Debug) { Write-Output "[VERBOSE] : Cmdlet Get-Mailbox successfull" }
+		
+		$TotalMailboxesCount = $Mailboxes | measure | select -ExpandProperty count
+		if($Debug) { Write-Output "[VERBOSE] : Total mailboxes : $TotalMailboxesCount" }
+	}
 } catch {
-	Write-Output "[ERROR] : Fail to run cmdlet 'Connect-AzAccount' : $($_.Exception[0].Message)"
+	Write-Output "[ERROR] : Fail to run cmdlet 'Get-Mailbox' : $($_.Exception[0].Message)"
 	break
 }
 
-foreach($Sub in $Subscriptions) {
-    Write-Output "--- Subscription : $($Sub.Name) ---"
+foreach($Mailbox in $Mailboxes) {
 
-    #Set context on the current subscription to select it
-    try {
-		Set-AzContext -SubscriptionId $Sub.Id -ErrorAction Stop
-		if($Debug) { Write-Output "[DEBUG] : AzContext retrieved" }
-	} catch {
-		Write-Output "[ERROR] : Fail to run cmdlet 'Set-AzContext' : $($_.Exception[0].Message)"
-		break
+	#USER DOMAIN
+	if([string]::IsNullOrEmpty($Mailbox.UserPrincipalName)) {
+		$UserDomain = ""
+	} else {
+		$UserDomain = ($Mailbox.UserPrincipalName -split "@")[1]
 	}
+	if($Debug) { Write-Output "[VERBOSE] : UserDomain : $UserDomain" }
 	
-	#List roles for each subscription
+	#MAILBOX STATISTICS
 	try {
-		$roles = Get-AzRoleAssignment -Scope "/subscriptions/$($Sub.Id)" -ErrorAction Stop #| ?{(!($_.Scope -match "\w+\/providers/+\w"))}
-		if($Debug) { Write-Output "[DEBUG] : AzRoleAssignment retrieved for subscription $($Sub.Id)" }
+		$MailboxStatistics = Get-EXOMailboxStatistics $Mailbox.Guid.Guid -ErrorAction Stop
+		if($Debug) { Write-Output "[VERBOSE] : Cmdlet 'Get-EXOMailboxStatistics' successfull" }
 	} catch {
-		Write-Output "[ERROR] : Fail to run cmdlet 'Get-AzRoleAssignment' on subscription $($Sub.Id) : $($_.Exception[0].Message)"
+		$MailboxStatistics = ""
+		if($Debug) { Write-Output "[ERROR] : Fail to run cmdlet 'Get-EXOMailboxStatistics' for user $($Mailbox.UserPrincipalName) : $($_.Exception[0].Message)" } 
 	}
 	
-	foreach ($role in $roles) {
-		#Initialize variables for each loop to avoid duplicated values in case of exception
-		$ManagementGroup = $null
-		$Subscription = $null
-		$DisplayName = $null
-		$SignInName = $null
-		$ObjectType = $null
-		$RoleDefinitionName = $null
-		$Resource1 = $null
-		$Resource2 = $null
-		$Scope = $null
-		
-		#Define data
-		if(!([string]::IsNullOrEmpty($Sub.Name))) {
-			$Subscription = $Sub.Name
-		} else {
-			$Subscription = ""
-		}
-		if($Debug) { Write-Output "[DEBUG] : Subscription : $Subscription" }
-		
-		if(!([string]::IsNullOrEmpty($role.DisplayName))) {
-			$DisplayName = $role.DisplayName
-		} else {
-			$DisplayName = ""
-		}			
-		if($Debug) { Write-Output "[DEBUG] : DisplayName : $DisplayName" }
-
-		if(!([string]::IsNullOrEmpty($role.SignInName))) {
-			$SignInName = $role.SignInName
-		} else {
-			$SignInName = ""
-		}			
-		if($Debug) { Write-Output "[DEBUG] : SignInName : $SignInName" }		
-
-		if(!([string]::IsNullOrEmpty($role.ObjectType))) {
-			$ObjectType = $role.ObjectType
-		} else {
-			$ObjectType = ""
-		}			
-		if($Debug) { Write-Output "[DEBUG] : ObjectType : $ObjectType" }	
-
-		if(!([string]::IsNullOrEmpty($role.RoleDefinitionName))) {
-			$RoleDefinitionName = $role.RoleDefinitionName
-		} else {
-			$RoleDefinitionName = ""
-		}			
-		if($Debug) { Write-Output "[DEBUG] : RoleDefinitionName : $RoleDefinitionName" }			
-
-
-		if(!([string]::IsNullOrEmpty($role.Scope))) {
-			$Scope = $role.Scope
-		} else {
-			$Scope = ""
-		}			
-		if($Debug) { Write-Output "[DEBUG] : Scope : $Scope" }	
-
-		#If no scope is retrieved, Resource1 and Resource2 are empty
-		if($Scope -eq "/") {
-			$Resource1 = ""
-			$Resource2 = ""
-		} else {				
-			#Split the last 2 property values from Scope property to format Resource2 : e.g : /storageAccounts/dscdevfrstg
-			$Resource2temp = $role | select -ExpandProperty Scope | % { "/$(($_ -split("\/"))[-2])/$(($_ -split("\/"))[-1]) " }
-			if(!([string]::IsNullOrEmpty($Resource2temp))) {
-				$Resource2 = ($Resource2temp.Replace(" ",""))
-				
-				#Resource 1 : Scope - Resource2 : e.g : /subscriptions/d7cb1166-a780-4c7b-8435-4605786981eb/resourceGroups/dsc-dev-fr-rg/providers/Microsoft.Storage
-				$Resource1 = ($role | select -ExpandProperty Scope) -replace("$Resource2","")
-			} else {
-				"[ERROR] : Resource2 is null or empty ; cannot format Resource1 and Resource2"
-			}
-		}
-		if($Debug) { Write-Output "[DEBUG] : Resource1 : $Resource1" }
-		if($Debug) { Write-Output "[DEBUG] : Resource2 : $Resource2" }
-		
-		#Retrieve ManagementGroup from scope
-		if($Scope.startswith("/providers/Microsoft.Management/managementGroups/", "CurrentCultureIgnoreCase")) {
-			#If scope includes ManagementGroup, populate ManagementGroup but not Subscription
-			$ManagementGroup = ($Scope -split("/"))[-1] #/providers/Microsoft.Management/managementGroups/supiti_dev => supiti_dev
-			$Subscription = ""
-		} else {
-			#If not, populate only Subscription
-			$ManagementGroup = ""
-		}
-		if($Debug) { Write-Output "[DEBUG] : ManagementGroup : $ManagementGroup" }
-		
-		$obj = New-Object System.Object
-		$obj | Add-Member -MemberType NoteProperty -Name "ManagementGroup" -Value $ManagementGroup
-		$obj | Add-Member -MemberType NoteProperty -Name "Subscription" -Value $Subscription
-		$obj | Add-Member -MemberType NoteProperty -Name "DisplayName" -Value $DisplayName
-		$obj | Add-Member -MemberType NoteProperty -Name "SignInName" -Value $SignInName
-		$obj | Add-Member -MemberType NoteProperty -Name "ObjectType" -Value $ObjectType
-		$obj | Add-Member -MemberType NoteProperty -Name "RoleDefinitionName" -Value $RoleDefinitionName
-		$obj | Add-Member -MemberType NoteProperty -Name "Resource1" -Value $Resource1
-		$obj | Add-Member -MemberType NoteProperty -Name "Resource2" -Value $Resource2
-		$obj | Add-Member -MemberType NoteProperty -Name "Scope" -Value $Scope
-
-		$Data += $obj
+	#RECOVERABLE ITEMS STATISTICS
+	try {
+		$MailboxFolderStatistics = Get-EXOMailboxFolderStatistics $Mailbox.Guid.Guid -FolderScope RecoverableItems -ErrorAction Stop | ?{$_.Name -eq "Recoverable Items"}
+		if($Debug) { Write-Output "[VERBOSE] : Cmdlet 'Get-EXOMailboxFolderStatistics' successfull" }
+	} catch {
+		$MailboxFolderStatistics = ""
+		if($Debug) { Write-Output "[ERROR] : Fail to run cmdlet 'Get-EXOMailboxFolderStatistics' for user $($Mailbox.UserPrincipalName) : $($_.Exception[0].Message)" }
 	}
+	
+	#ARCHIVE STATISTICS
+	if($Mailbox.ArchiveStatus -eq "Active") {
+		try {
+			$ArchiveStatistics = Get-EXOMailboxStatistics $Mailbox.Guid.Guid -Archive -ErrorAction Stop
+			if($Debug) { Write-Output "[VERBOSE] : Cmdlet 'Get-EXOMailboxStatistics -Archive' successfull" }
+		} catch {
+			$ArchiveStatistics = ""
+			if($Debug) { Write-Output "[ERROR] : Fail to run cmdlet 'Get-EXOMailboxStatistics -Archive' for user $($Mailbox.UserPrincipalName) : $($_.Exception[0].Message)" }
+		}
+	} else {
+		if($Debug) { Write-Output "[VERBOSE] : No archive for user $($Mailbox.UserPrincipalName)" }
+	}
+	
+	if([string]::IsNullOrEmpty($MailboxStatistics)) {
+		#No mailbox statistics, cannot retrieve free and occupied space
+		$MailboxSize = "Unknown"
+		if($Debug) { Write-Output "[WARNING] : MailboxSize : Unknown" }
+	} else { 
+		#MAILBOX
+		#Calculate mailbox size, quota, percent free and threshold
+		$MailboxSize = ($MailboxStatistics.TotalItemSize.Value).ToGb()
+		if($Debug) { Write-Output "[VERBOSE] : MailboxSize retrieved : $MailboxSize GB" }
+		
+		$MailboxSizeQuota = [math]::Round(($Mailbox.ProhibitSendReceiveQuota -replace '^.+\((.+\))','$1' -replace '\D' -as [int64])/1GB)
+		if($Debug) { Write-Output "[VERBOSE] : MailboxSizeQuota retrieved : $MailboxSizeQuota GB" }
+		
+		$MailboxSizePercentFree = (($MailboxSizeQuota-$MailboxSize) * 100)/$MailboxSizeQuota
+		if($Debug) { Write-Output "[VERBOSE] : MailboxSizePercentFree retrieved : $MailboxSizePercentFree %" }
+		
+		#Set current mailbox size indicator : critical or warning
+		if($MailboxSizePercentFree -le 5) {
+			$MailboxSizeThreshold = "Critical"
+		} elseif(($MailboxSizePercentFree -le 10) -and ($MailboxSizePercentFree -ge 6)) {
+			$MailboxSizeThreshold = "Warning"
+		} else {
+			$MailboxSizeThreshold = "Ok"
+		}		
+		if($Debug){ Write-Output "[VERBOSE] : Mailbox free size : $MailboxSizePercentFree % - threshold $MailboxSizeThreshold " }
+		
+		#DELETED ITEMS
+		#Calculate deleted items size, quota, percent free and threshold
+		$DeletedItemsSize = ($MailboxStatistics.TotalDeletedItemSize.Value).ToGb()
+		if($Debug) { Write-Output "[VERBOSE] : DeletedItemsSize retrieved : $DeletedItemsSize GB" }
+		
+		$DeletedItemsQuota = [math]::Round(($Mailbox.ProhibitSendReceiveQuota -replace '^.+\((.+\))','$1' -replace '\D' -as [int64])/1GB)
+		if($Debug) { Write-Output "[VERBOSE] : DeletedItemsQuota retrieved : $DeletedItemsQuota GB" }
+		
+		$DeletedItemsPercentFree = (($DeletedItemsQuota-$DeletedItemsSize) * 100)/$DeletedItemsQuota
+		if($Debug) { Write-Output "[VERBOSE] : DeletedItemsPercentFree retrieved : $DeletedItemsPercentFree %" }
+		
+		#Set current deleted items size indicator : critical or warning
+		if($DeletedItemsPercentFree -le 5) {
+			$DeletedItemsThreshold = "Critical"
+		} elseif(($DeletedItemsPercentFree -le 10) -and ($DeletedItemsPercentFree -ge 6)) {
+			$DeletedItemsThreshold = "Warning"
+		} else {
+			$DeletedItemsThreshold = "Ok"
+		}
+		
+		if($Debug) { Write-Output "[VERBOSE] : Deleted items free size : $DeletedItemsPercentFree % - threshold $DeletedItemsThreshold" }
+	}
+	
+	#RECOVERABLE ITEMS
+	#Calculate recoverable items size, quota, percent free and threshold
+	if([string]::IsNullOrEmpty($MailboxFolderStatistics)) {
+		$RecoverableItemsSize = "Unknown"
+		if($Debug) { Write-Output "[WARNING] : RecoverableItemsSize : Unknown" }
+	} else {
+		$RecoverableItemsSize = [math]::Round((($MailboxFolderStatistics | select -ExpandProperty FolderAndSubfolderSize) -replace '^.+\((.+\))','$1' -replace '\D' -as [int64])/1GB)#Reformat 105 MB (110,093,300 bytes) to 110093300 and divide by 1
+		if($Debug) { Write-Output "[VERBOSE] : RecoverableItemsSize retrieved : $RecoverableItemsSize GB" }
+		
+		$RecoverableItemsQuota = [math]::Round(($Mailbox.RecoverableItemsQuota -replace '^.+\((.+\))','$1' -replace '\D' -as [int64])/1GB)
+		if($Debug) { Write-Output "[VERBOSE] : RecoverableItemsQuota retrieved : $RecoverableItemsQuota GB" }
+		
+		$RecoverableItemsPercentFree = (($RecoverableItemsQuota-$RecoverableItemsSize) * 100)/$RecoverableItemsQuota
+		if($Debug) { Write-Output "[VERBOSE] : RecoverableItemsPercentFree retrieved : $RecoverableItemsPercentFree %" }
+		
+		#Set current recoverable items size indicator : critical or warning
+		if($RecoverableItemsPercentFree -le 5) {
+			$RecoverableItemsSizeThreshold = "Critical"
+		} elseif(($RecoverableItemsPercentFree -le 10) -and ($RecoverableItemsPercentFree -ge 6)) {
+			$RecoverableItemsSizeThreshold = "Warning"
+		} else {
+			$RecoverableItemsSizeThreshold = "Ok"
+		}
+		if($Debug) { Write-Output "[VERBOSE] : Recoverable items free size : $RecoverableItemsPercentFree % - threshold $RecoverableItemsSizeThreshold" }
+		
+		#ARCHIVE
+		if([string]::IsNullOrEmpty($ArchiveStatistics)) {
+			$ArchiveSize = "Unknown"
+			if($Debug) { Write-Output "[WARNING] : ArchiveSize : Unknown" }
+		} else {
+			$ArchiveSize = ($ArchiveStatistics.TotalItemSize.Value).ToGb()
+			if($Debug) { Write-Output "[VERBOSE] : ArchiveSize : $ArchiveSize GB" }
+		}
+	}
+		
+	$obj = New-Object System.Object
+	$obj | Add-Member -MemberType NoteProperty -Name "UsageLocation" -Value $Mailbox.UsageLocation
+	$obj | Add-Member -MemberType NoteProperty -Name "Domain" -Value $UserDomain
+	$obj | Add-Member -MemberType NoteProperty -Name "UserPrincipalName" -Value $Mailbox.UserPrincipalName
+	$obj | Add-Member -MemberType NoteProperty -Name "RecipientTypeDetails" -Value $Mailbox.RecipientTypeDetails
+	
+	$obj | Add-Member -MemberType NoteProperty -Name "MailboxSize(GB)" -Value $MailboxSize
+	$obj | Add-Member -MemberType NoteProperty -Name "MailboxSizeQuota(GB)" -Value $MailboxSizeQuota
+	$obj | Add-Member -MemberType NoteProperty -Name "MailboxSizePercentFree(%)" -Value $MailboxSizePercentFree
+	$obj | Add-Member -MemberType NoteProperty -Name "MailboxSizeThreshold" -Value $MailboxSizeThreshold
+	
+	$obj | Add-Member -MemberType NoteProperty -Name "RecoverableItemsSize(GB)" -Value $RecoverableItemsSize
+	$obj | Add-Member -MemberType NoteProperty -Name "RecoverableItemsQuota(GB)" -Value $RecoverableItemsQuota
+	$obj | Add-Member -MemberType NoteProperty -Name "RecoverableItemsPercentFree(%)" -Value $RecoverableItemsPercentFree
+	$obj | Add-Member -MemberType NoteProperty -Name "RecoverableItemsSizeThreshold" -Value $RecoverableItemsSizeThreshold
+	
+	$obj | Add-Member -MemberType NoteProperty -Name "DeletedItemsSize(GB)" -Value $DeletedItemsSize
+	$obj | Add-Member -MemberType NoteProperty -Name "DeletedItemsQuota(GB)" -Value $DeletedItemsQuota
+	$obj | Add-Member -MemberType NoteProperty -Name "DeletedItemsPercentFree(%)" -Value $DeletedItemsPercentFree
+	$obj | Add-Member -MemberType NoteProperty -Name "DeletedItemsThreshold" -Value $DeletedItemsThreshold
+	
+	$obj | Add-Member -MemberType NoteProperty -Name "ArchiveSize(GB)" -Value $ArchiveSize
+	$obj | Add-Member -MemberType NoteProperty -Name "AutoExpandingArchiveEnabled" -Value $Mailbox.AutoExpandingArchiveEnabled	
+	
+	$Data += $obj
+	
+	<#Clear-Variable -Name MailboxSize
+	Clear-Variable -Name MailboxSizeQuota
+	Clear-Variable -Name MailboxSizePercentFree
+	Clear-Variable -Name MailboxSizeThreshold
+	Clear-Variable -Name RecoverableItemsSize
+	Clear-Variable -Name RecoverableItemsQuota
+	Clear-Variable -Name RecoverableItemsPercentFree
+	Clear-Variable -Name RecoverableItemsSizeThreshold
+	Clear-Variable -Name DeletedItemsSize
+	Clear-Variable -Name DeletedItemsQuota
+	Clear-Variable -Name DeletedItemsPercentFree
+	Clear-Variable -Name DeletedItemsThreshold
+	Clear-Variable -Name ArchiveSize #>
 }
 
+#Export data to csv
 if(!([string]::IsNullOrEmpty($Data))) {
 	try {
 		#Export data in a csv file
-		$Data | sort ManagementGroup,Subscription,RoleDefinitionName,Resource2 | Export-Csv -Path $ReportPath -NoTypeInformation -Encoding Default -Delimiter ";" -ErrorAction Stop
-		if($Debug) { Write-Output "[DEBUG] : Export csv successfull" }
+		$Data | Export-Csv -Path $ReportPath -NoTypeInformation -Encoding Default -Delimiter ";" -ErrorAction Stop
+		if($Debug) { Write-Output "[DEBUG] : Export-Csv successfull" }
 	} catch {
-		"[ERROR] : Fail to run cmdlet 'Export-Csv' : {0}" -f $_.Exception[0].Message
+		Write-Output "[ERROR] : Fail to run cmdlet 'Export-Csv' : $($_.Exception[0].Message)"
 	}
-    
+
     #Operate in the same subscription than automation and storage accounts
-    Set-AzContext -SubscriptionId $AutomationSubscriptionId
-     
-	#Store report file to storage container
+    try {
+        Set-AzContext -SubscriptionId $AutomationSubscriptionId -ErrorAction Stop
+        if($Debug) { Write-Output "[DEBUG] : Set-AzContext successfull" }
+    } catch {
+        Write-Output "[ERROR] : Fail to run cmdlet 'Set-AzContext' : $($_.Exception[0].Message)"
+    }
+
+    #Store report file to storage container
     try {
         $ctx = (Get-AzStorageAccount -ResourceGroupName $RGName -Name $StorageAccountName).Context
 
         Set-AzStorageBlobContent -File $ReportPath -Container $StorageAccountContainer -Blob $BlobNameReport -Context $ctx -Force -ErrorAction Stop
-        "[OK] : File {0} successfully created or updated to blob : {1}" -f $ReportPath,$BlobNameReport
+        Write-Output "[OK] : File $ReportPath successfully created or updated to blob : $BlobNameReport"
 
-		#Create the latest csv file used to load the data in the web report
+        #Create the latest csv file used to load the data in the web report
         Set-AzStorageBlobContent -File $ReportPath -Container $StorageAccountContainer -Blob $BlobNameReportCurrent -Context $ctx -Force -ErrorAction Stop
-        "[OK] : File {0} successfully created or updated to blob : {1}" -f $ReportPath,$BlobNameReportCurrent
+        Write-Output "[OK] : File $ReportPath successfully created or updated to blob : $BlobNameReportCurrent"
             
     } catch {
-        "[ERROR] : Fail to run cmdlet 'Set-AzStorageBlobContent' : {0}" -f $_.Exception[0].Message
+        Write-Output "[ERROR] : Fail to run cmdlet 'Set-AzStorageBlobContent' : $($_.Exception[0].Message)"
     }
 }
+
+$JobEnd = Get-Date
+Write-Output "JobEnd : $($JobEnd)"
+
+$JobDuration = "$([math]::Round($(New-TimeSpan -Start $JobStart -End $JobEnd | select -ExpandProperty TotalMinutes)))"
+Write-Output "JobDuration : $($JobDuration)  mn"
