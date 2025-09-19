@@ -43,7 +43,7 @@
 				<th onclick="sortTable(3)">MailboxSizeThreshold</th>
 				<th onclick="sortTable(4)">RecoverableItemsSizeThreshold</th>
 				<th onclick="sortTable(5)">DeletedItemsThreshold</th>
-				<th onclick="sortTable(6)">ArchiveStatus</th>
+				<th onclick="sortTable(6)">ArchiveSize</th>
 				<th onclick="sortTable(7)">AutoExpandingArchiveEnabled</th>
         <!-- add/remove as needed -->
       </tr>
@@ -60,17 +60,12 @@
 async function loadCsv() {
   const baseUrl = 'https://altifrcprdwebreportsstg.z28.web.core.windows.net/priv';
   const csvPath = 'data/Get-MailboxesSizes/Get-MailboxesSizes_latest.csv';
-  const sas='<sas>'; // replaced by runbook
-  const fullUrl = `${baseUrl}/${csvPath}${sas}`;
-
-  const res = await fetch(fullUrl);
+	const sas='<sas>'; // replaced by runbook
+  const res = await fetch(`${baseUrl}/${csvPath}${sas}`);
   const txt = await res.text();
-  const parsed = Papa.parse(txt, {
-    header: true,
-    dynamicTyping: true,
-    delimiter: ';',
-    skipEmptyLines: true,
-    transformHeader: h => h.trim().replace(/^"|"$/g,'')
+  const parsed = Papa.parse(txt,{
+    header:true,dynamicTyping:true,delimiter:';',skipEmptyLines:true,
+    transformHeader:h=>h.trim().replace(/^"|"$/g,'')
   });
   csvData = parsed.data;
 }
@@ -81,7 +76,7 @@ function renderTable(rows) {
   tbody.innerHTML = '';
   rows.forEach(r => {
     const tr = document.createElement('tr');
-    ['UserPrincipalName','RecipientTypeDetails','MailboxSizePercentFree(%)','MailboxSizeThreshold','RecoverableItemsSizeThreshold','DeletedItemsThreshold','ArchiveStatus','AutoExpandingArchiveEnabled'].forEach(k => {
+    ['UserPrincipalName','RecipientTypeDetails','MailboxSizePercentFree(%)','MailboxSizeThreshold','RecoverableItemsSizeThreshold','DeletedItemsThreshold','ArchiveSize','AutoExpandingArchiveEnabled'].forEach(k => {
   const td = document.createElement('td');
   td.textContent = r[k] ?? '';
 

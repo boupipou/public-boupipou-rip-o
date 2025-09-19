@@ -1,14 +1,20 @@
 runbooks : 
 -remplacer les "[OK/DEBUG/ERROR] : blabla : {0} blibli" -f $var par Write-Output
 -ajouter les [OK/DEBUG/ERROR] manquants
+-remplacer [INFO] par [VERBOSE]
+-dans [VERBOSE] : mettre Cmdlet 'xxx-xxx' successfull au lieu du texte
+-remplacer Failed to par Fail to
+-ajouter try {} catch {} manquants et -ErrorAction Stop manquants
+
 -ajouter date de début job : $JobStart = Get-Date; Write-Output "Job start : $JobStart"
 -ajouter date fin job : $JobEnd = Get-Date; Write-Output "Job end : $JobEnd"
--ajouter temps total job : $JobDuration = "$([math]::Round($(New-TimeSpan -Start $JobStart -End $JobEnd | select -ExpandProperty TotalMinutes))) mn"
+-ajouter temps total job : $JobDuration = "[math]::Round($(New-TimeSpan -Start $JobStart -End $JobEnd | select -ExpandProperty TotalMinutes))"; Write-Output "JobDuration : $($JobDuration)  mn"
+
 
 pages html : 
 -ajouter date de dernier rafraichissement rapports
 -ajouter bouton pour rafraichir les données
 -report AZAssignments : phrase explicative sur la dissociation dans rapport IAM Azure management group / sub
--report MailboxesSizes : modifier Archive par Archive size ou None
+-report MailboxesSizes : modifier ArchiveStatus par Archive size ou None
 -modifier le nom des pages pour ajouter un service associé en préfixe : AAD/EXO/SPO ... pour pouvoir grouper par service sur la page d'accueil par exemple
 -

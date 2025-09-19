@@ -3,7 +3,7 @@ $StorageAccountName = Get-AutomationVariable -Name 'StorageAccountName'
 $StorageAccountContainerPriv = Get-AutomationVariable -Name 'StorageContainerPriv'
 $StorageAccountContainerPub = Get-AutomationVariable -Name 'StorageContainerPub'
 $AutomationSubscriptionId = Get-AutomationVariable -Name 'AutomationSubscriptionId'
-$WebPageName = "AZRoleAssignments"
+$WebPageName = "EXOMailboxesSizes"
 
 Connect-AzAccount -Identity
 
@@ -32,7 +32,7 @@ try {
     -CorsRules @(
         @{
             AllowedHeaders    = "*"
-            AllowedOrigins    = "https://dscshow.z28.web.core.windows.net/"
+            AllowedOrigins    = "https://altifrcprdwebreportsstg.z28.web.core.windows.net/"
             AllowedMethods    = "GET"
             ExposedHeaders    = "*"
             MaxAgeInSeconds   = 3600
