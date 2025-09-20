@@ -1,4 +1,0 @@
-"Domain";"UserPrincipalName";"RecipientTypeDetails";"MailboxSize(GB)";"MailboxSizeQuota(GB)";"MailboxSizePercentFree(%)";"MailboxSizeThreshold";"RecoverableItemsSize(GB)";"RecoverableItemsQuota(GB)";"RecoverableItemsPercentFree(%)";"RecoverableItemsSizeThreshold";"DeletedItemsSize(GB)";"DeletedItemsQuota(GB)";"DeletedItemsPercentFree(%)";"DeletedItemsThreshold";"ArchiveStatus";"AutoExpandingArchiveEnabled"
-"contoso.com";"martine.pinson@contoso.com";"UserMailbox";"25";"100";"75";"Ok";"95";"100";"5";"Critical";"0";"100";100";"Ok";"Active";"False"
-"contoso.fr";"emilie.tartre@contoso.com";"UserMailbox";"90";"100";"10";"Warning";"5";"100";"95";"Ok";"70";"100";"30";"Ok";"Active";"False"
-"contoso.com";"manon.cavallois-shared@contoso.com";"SharedMailbox";"25";"50";"25";"Ok";"0";"50";"100";"Ok";"5";"45";"90";"Ok";"None";"False"

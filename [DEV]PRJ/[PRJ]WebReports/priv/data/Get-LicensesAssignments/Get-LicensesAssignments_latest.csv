@@ -1,5 +1,0 @@
-"Domain";"UserPrincipalName";"ProductStringId";"ProductDisplayName";"Type";"AssignedByGroup"
-"contoso.com";"adam.werber@contoso.com";"EMS";"Enterprise Mobility + Security E3";"Two assignment by groups";"GRP-LIC-EMS-E3,GRP-LIC-SECURITY"
-"contoso.com";"julia.mongin@contoso.com";"ENTERPRISEPACK,SPE_F1";"Office 365 E3,Microsoft 365 F3";"Two important licenses assigned";"-"
-"contoso.fr";"paul.leblanc@contoso.fr";"STANDARDPACK";"Office 365 E1";"Direct + Inherited";"GRP-LIC-EMS-E1"
-"contoso.onmicrosoft.com";"franck.langlois@contoso.onmicrosoft.com";"EMS";"Enterprise Mobility + Security E3";"Two assignment by groups";"GRP-LIC-EMS-E3,GRP-LIC-SECURITY"

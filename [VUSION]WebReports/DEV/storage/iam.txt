@@ -1,3 +1,0 @@
-Reader > aac
-Storage Account Key Operator Service Role > aac
-Storage Blob Data Contributor > aac

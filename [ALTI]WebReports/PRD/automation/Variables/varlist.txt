@@ -1,7 +1,0 @@
-AutomationAccountName
-AutomationSubscriptionId
-RGName : dsc-prod-fr-rg
-StorageAccountName : dscshow
-StorageContainerPriv : priv
-StorageContainerPub : $web
-StorageContainerTest : test

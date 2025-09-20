@@ -1,8 +1,0 @@
-AutomationAccountName : dsc-prod-fr-automation
-AutomationSubscriptionId : e35f81d7-fc77-4d4d-95cf-91ce225de5ab
-RGName : dsc-prod-fr-rg
-StorageAccountName : dscshow
-StorageContainerPriv : priv
-StorageContainerPub : $web
-StorageContainerTest : test
-WebAppName : dsc-prod-fr-webapp

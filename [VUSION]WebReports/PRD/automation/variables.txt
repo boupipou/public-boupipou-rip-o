@@ -1,7 +1,0 @@
-AutomationAccountName
-AutomationSubscriptionId
-RGName
-StorageAccountName
-StorageContainerPriv
-StorageContainerPub
-StorageContainerTest
