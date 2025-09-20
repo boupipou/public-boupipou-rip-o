@@ -37,6 +37,7 @@
   </div>
 
 <div id="footer-placeholder"></div>
+<script src="common.js"></script> <!-- ✅ contains theme + footer + helpers -->
 <script>
 // Footer
   (async () => {
@@ -48,23 +49,6 @@
       console.error('Cannot load footer:', err);
     }
   })();
-
-    function initTheme() {
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'light') document.body.classList.add('light-mode');
-    }
-
-    function toggleTheme() {
-      document.body.classList.toggle('light-mode');
-      localStorage.setItem('theme',
-        document.body.classList.contains('light-mode') ? 'light' : 'dark'
-      );
-    }
-
-    function goBack() {
-      if (window.history.length > 1) window.history.back();
-      else window.location.href = 'index.html';
-    }
 
     // Live search
     function filterIcons() {

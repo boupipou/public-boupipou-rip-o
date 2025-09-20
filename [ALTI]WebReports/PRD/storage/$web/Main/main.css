@@ -463,3 +463,15 @@ body.light-mode a:hover {
   justify-content: center; /* center the button */
   margin: 20px 0;
 }
+
+.filter-button {
+  margin-left: 10px;
+  padding: 5px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Smooth transition for theme switch */
+body.theme-transition {
+  transition: background-color 0.4s ease, color 0.4s ease;
+}

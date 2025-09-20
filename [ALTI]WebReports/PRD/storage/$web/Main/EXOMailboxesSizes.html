@@ -31,6 +31,9 @@
   <div class="filters">
     <input id="tableSearch" type="text" placeholder="🔍 Search..."
            onkeyup="filterTable()" class="search" />
+    <button id="toggleCriticalBtn" onclick="toggleCritical()" class="filter-button">
+			  Show Critical Only
+		</button>
   </div>
 
   <!-- Table -->
@@ -69,58 +72,42 @@ async function loadCsv() {
 	console.log(parsed.meta.fields); // 👈 shows all detected column names
   csvData = parsed.data;
 	renderTable(csvData);
+	showCounters([...document.querySelectorAll('#mbsizeBody tr')]);
 }
 
 /* ---------------- table render ---------------- */
 function renderTable(rows) {
   const tbody = document.getElementById('mbsizeBody');
   tbody.innerHTML = '';
+
   rows.forEach(r => {
     const tr = document.createElement('tr');
-    ['UserPrincipalName', 'RecipientTypeDetails', 'MailboxSizePercentFree', 'MailboxSizeThreshold', 'RecoverableItemsSizeThreshold', 'DeletedItemsThreshold', 'ArchiveSize', 'AutoExpandingArchiveEnabled'].forEach(k => {
-  const td = document.createElement('td');
-  td.textContent = r[k] ?? '';
+    [
+      'UserPrincipalName',
+      'RecipientTypeDetails',
+      'MailboxSizePercentFree',
+      'MailboxSizeThreshold',
+      'RecoverableItemsSizeThreshold',
+      'DeletedItemsThreshold',
+      'ArchiveSize',
+      'AutoExpandingArchiveEnabled'
+    ].forEach(k => {
+      const td = document.createElement('td');
+      td.textContent = r[k] ?? '';
 
-  // highlight Warning / Critical
-  if (k === 'MailboxSizeThreshold') {
-    if (String(r[k]).toLowerCase() === 'warning') {
-      td.classList.add('warning');
-    }
-    if (String(r[k]).toLowerCase() === 'critical') {
-      td.classList.add('critical');
-    }
-  }
+      // highlight Warning / Critical
+      if (['MailboxSizeThreshold','RecoverableItemsSizeThreshold','DeletedItemsThreshold'].includes(k)) {
+        if (String(r[k]).toLowerCase() === 'warning') td.classList.add('warning');
+        if (String(r[k]).toLowerCase() === 'critical') td.classList.add('critical');
+      }
 
-	if (k === 'RecoverableItemsSizeThreshold') {
-    if (String(r[k]).toLowerCase() === 'warning') {
-      td.classList.add('warning');
-    }
-    if (String(r[k]).toLowerCase() === 'critical') {
-      td.classList.add('critical');
-    }
-  }
-
-	if (k === 'DeletedItemsThreshold') {
-    if (String(r[k]).toLowerCase() === 'warning') {
-      td.classList.add('warning');
-    }
-    if (String(r[k]).toLowerCase() === 'critical') {
-      td.classList.add('critical');
-    }
-  }
-	
-  tr.appendChild(td);
-});
+      tr.appendChild(td);
+    });
     tbody.appendChild(tr);
   });
-  showCounters(rows);
-}
 
-/* ---------------- counters ---------------- */
-function showCounters(rows) {
-  const total = rows.length;
-  document.getElementById('mbsizeCounters').textContent =
-    `Total rows: ${total}`;
+  // ✅ always recalc from rendered DOM rows
+  showCounters([...document.querySelectorAll('#mbsizeBody tr')]);
 }
 
 /* ---------------- filters ---------------- */
@@ -131,9 +118,7 @@ function filterTable() {
   rows.forEach(r => {
     r.style.display = r.textContent.toLowerCase().includes(q) ? '' : 'none';
   });
-  showCounters(visible.map(r => {
-    return {}; // 🔹 adapt if you want smarter counters
-  }));
+  showCounters(visible);
 }
 
 /* ---------------- sorting ---------------- */
@@ -154,6 +139,63 @@ function sortTable(idx) {
     if(!isNaN(A) && !isNaN(B)) return asc ? A-B : B-A;
     return asc ? A.localeCompare(B) : B.localeCompare(A);
   }).forEach(r => tbody.appendChild(r));
+}
+
+let criticalMode = false; // state for toggle
+
+function showCounters(rows) {
+  const total = rows.length;
+
+  let critical = 0, warning = 0;
+
+  rows.forEach(r => {
+    const cells = [...r.querySelectorAll('td')];
+    const mailbox = cells[3]?.textContent.toLowerCase();      // MailboxSizeThreshold
+    const recov   = cells[4]?.textContent.toLowerCase();      // RecoverableItemsSizeThreshold
+    const deleted = cells[5]?.textContent.toLowerCase();      // DeletedItemsThreshold
+
+    if ([mailbox, recov, deleted].includes('critical')) critical++;
+    else if ([mailbox, recov, deleted].includes('warning')) warning++;
+  });
+
+  document.getElementById('mbsizeCounters').innerHTML = `
+    Total: ${total} – 
+    <span class="critical">Critical: ${critical}</span> – 
+    <span class="warning">Warning: ${warning}</span>
+  `;
+}
+
+function toggleCritical() {
+  const rows = document.querySelectorAll('#mbsizeBody tr');
+  const btn = document.getElementById('toggleCriticalBtn');
+
+  if (!criticalMode) {
+    // Enable filter
+    let visible = [];
+    rows.forEach(r => {
+      const cells = [...r.cells];
+      const isCritical = 
+        (cells[3]?.textContent.toLowerCase() === 'critical') ||
+        (cells[4]?.textContent.toLowerCase() === 'critical') ||
+        (cells[5]?.textContent.toLowerCase() === 'critical');
+
+      if (isCritical) {
+        r.style.display = '';
+        visible.push(r);
+      } else {
+        r.style.display = 'none';
+      }
+    });
+    showCounters(visible);
+    btn.textContent = "Show All";
+    criticalMode = true;
+  } else {
+    // Disable filter
+    rows.forEach(r => r.style.display = '');
+    showCounters([...rows]);
+    btn.textContent = "Show Critical Only";
+    criticalMode = false;
+  }
 }
 
 /* ---------------- boot ---------------- */

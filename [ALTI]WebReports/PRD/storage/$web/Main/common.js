@@ -1,16 +1,23 @@
 /* ---------- Theme handling ---------- */
 function initTheme() {
-  if (localStorage.getItem('theme') === 'light') {
+  const theme = localStorage.getItem('theme') || 'dark'; // default = dark
+  if (theme === 'light') {
     document.body.classList.add('light-mode');
+  } else {
+    document.body.classList.remove('light-mode');
   }
 }
 
 function toggleTheme() {
-  document.body.classList.toggle('light-mode');
-  localStorage.setItem(
-    'theme',
-    document.body.classList.contains('light-mode') ? 'light' : 'dark'
-  );
+  // add a smooth transition class before toggling
+  document.body.classList.add('theme-transition');
+  const isLight = document.body.classList.toggle('light-mode');
+  localStorage.setItem('theme', isLight ? 'light' : 'dark');
+
+  // remove the transition class after animation ends
+  setTimeout(() => {
+    document.body.classList.remove('theme-transition');
+  }, 400); // 400ms matches CSS duration
 }
 
 /* ---------- Navigation ---------- */

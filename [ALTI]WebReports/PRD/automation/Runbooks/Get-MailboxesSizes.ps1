@@ -84,7 +84,7 @@ try {
 
 #Retrieve all mailboxes
 try {
-	$Mailboxes = Get-ExoMailbox -ResultSize Unlimited -Properties Guid,UserPrincipalName,ArchiveStatus,ProhibitSendReceiveQuota,UsageLocation,RecipientTypeDetails,AutoExpandingArchiveEnabled -ErrorAction Stop
+	$Mailboxes = Get-ExoMailbox -ResultSize Unlimited -Properties Guid,UserPrincipalName,ArchiveStatus,RecoverableItemsQuota,ProhibitSendReceiveQuota,UsageLocation,RecipientTypeDetails,AutoExpandingArchiveEnabled -ErrorAction Stop
 	if(!([string]::IsNullOrEmpty($Mailboxes))) {
 		if($Debug) { Write-Output "[VERBOSE] : Cmdlet Get-Mailbox successfull" }
 		
@@ -130,11 +130,12 @@ foreach($Mailbox in $Mailboxes) {
 			$ArchiveStatistics = Get-EXOMailboxStatistics $Mailbox.Guid.Guid -Archive -ErrorAction Stop
 			if($Debug) { Write-Output "[VERBOSE] : Cmdlet 'Get-EXOMailboxStatistics -Archive' successfull" }
 		} catch {
-			$ArchiveStatistics = ""
+			$ArchiveStatistics = "Error"
 			if($Debug) { Write-Output "[ERROR] : Fail to run cmdlet 'Get-EXOMailboxStatistics -Archive' for user $($Mailbox.UserPrincipalName) : $($_.Exception[0].Message)" }
 		}
 	} else {
 		if($Debug) { Write-Output "[VERBOSE] : No archive for user $($Mailbox.UserPrincipalName)" }
+        $ArchiveStatistics = "None"
 	}
 	
 	if([string]::IsNullOrEmpty($MailboxStatistics)) {
@@ -195,7 +196,16 @@ foreach($Mailbox in $Mailboxes) {
 		$RecoverableItemsSize = [math]::Round((($MailboxFolderStatistics | select -ExpandProperty FolderAndSubfolderSize) -replace '^.+\((.+\))','$1' -replace '\D' -as [int64])/1GB)#Reformat 105 MB (110,093,300 bytes) to 110093300 and divide by 1
 		if($Debug) { Write-Output "[VERBOSE] : RecoverableItemsSize retrieved : $RecoverableItemsSize GB" }
 		
-		$RecoverableItemsQuota = [math]::Round(($Mailbox.RecoverableItemsQuota -replace '^.+\((.+\))','$1' -replace '\D' -as [int64])/1GB)
+		$RecoverableItemsQuota = $Mailbox.RecoverableItemsQuota.ToString()
+        if ($quotaStr -match '\(([0-9,]+)\s*bytes\)') {
+            #Remove commas, then convert to GB
+            $bytes = ($matches[1] -replace ',','')
+            $RecoverableItemsQuota = [math]::Round([double]$bytes / 1GB)
+        } elseif ($quotaStr -eq "Unlimited") {
+            $RecoverableItemsQuota = "Unlimited"
+        } else {
+            $RecoverableItemsQuota = 0
+        }
 		if($Debug) { Write-Output "[VERBOSE] : RecoverableItemsQuota retrieved : $RecoverableItemsQuota GB" }
 		
 		$RecoverableItemsPercentFree = (($RecoverableItemsQuota-$RecoverableItemsSize) * 100)/$RecoverableItemsQuota
@@ -227,27 +237,27 @@ foreach($Mailbox in $Mailboxes) {
 	$obj | Add-Member -MemberType NoteProperty -Name "UserPrincipalName" -Value $Mailbox.UserPrincipalName
 	$obj | Add-Member -MemberType NoteProperty -Name "RecipientTypeDetails" -Value $Mailbox.RecipientTypeDetails
 	
-	$obj | Add-Member -MemberType NoteProperty -Name "MailboxSize(GB)" -Value $MailboxSize
-	$obj | Add-Member -MemberType NoteProperty -Name "MailboxSizeQuota(GB)" -Value $MailboxSizeQuota
-	$obj | Add-Member -MemberType NoteProperty -Name "MailboxSizePercentFree(%)" -Value $MailboxSizePercentFree
+	$obj | Add-Member -MemberType NoteProperty -Name "MailboxSize" -Value $MailboxSize
+	$obj | Add-Member -MemberType NoteProperty -Name "MailboxSizeQuota" -Value $MailboxSizeQuota
+	$obj | Add-Member -MemberType NoteProperty -Name "MailboxSizePercentFree" -Value "$MailboxSizePercentFree%"
 	$obj | Add-Member -MemberType NoteProperty -Name "MailboxSizeThreshold" -Value $MailboxSizeThreshold
 	
-	$obj | Add-Member -MemberType NoteProperty -Name "RecoverableItemsSize(GB)" -Value $RecoverableItemsSize
-	$obj | Add-Member -MemberType NoteProperty -Name "RecoverableItemsQuota(GB)" -Value $RecoverableItemsQuota
-	$obj | Add-Member -MemberType NoteProperty -Name "RecoverableItemsPercentFree(%)" -Value $RecoverableItemsPercentFree
+	$obj | Add-Member -MemberType NoteProperty -Name "RecoverableItemsSize" -Value $RecoverableItemsSize
+	$obj | Add-Member -MemberType NoteProperty -Name "RecoverableItemsQuota" -Value $RecoverableItemsQuota
+	$obj | Add-Member -MemberType NoteProperty -Name "RecoverableItemsPercentFree" -Value "$RecoverableItemsPercentFree%"
 	$obj | Add-Member -MemberType NoteProperty -Name "RecoverableItemsSizeThreshold" -Value $RecoverableItemsSizeThreshold
 	
-	$obj | Add-Member -MemberType NoteProperty -Name "DeletedItemsSize(GB)" -Value $DeletedItemsSize
-	$obj | Add-Member -MemberType NoteProperty -Name "DeletedItemsQuota(GB)" -Value $DeletedItemsQuota
-	$obj | Add-Member -MemberType NoteProperty -Name "DeletedItemsPercentFree(%)" -Value $DeletedItemsPercentFree
+	$obj | Add-Member -MemberType NoteProperty -Name "DeletedItemsSize" -Value $DeletedItemsSize
+	$obj | Add-Member -MemberType NoteProperty -Name "DeletedItemsQuota" -Value $DeletedItemsQuota
+	$obj | Add-Member -MemberType NoteProperty -Name "DeletedItemsPercentFree" -Value "$DeletedItemsPercentFree%"
 	$obj | Add-Member -MemberType NoteProperty -Name "DeletedItemsThreshold" -Value $DeletedItemsThreshold
 	
-	$obj | Add-Member -MemberType NoteProperty -Name "ArchiveSize(GB)" -Value $ArchiveSize
+	$obj | Add-Member -MemberType NoteProperty -Name "ArchiveSize" -Value $ArchiveSize
 	$obj | Add-Member -MemberType NoteProperty -Name "AutoExpandingArchiveEnabled" -Value $Mailbox.AutoExpandingArchiveEnabled	
 	
 	$Data += $obj
 	
-	<#Clear-Variable -Name MailboxSize
+	Clear-Variable -Name MailboxSize
 	Clear-Variable -Name MailboxSizeQuota
 	Clear-Variable -Name MailboxSizePercentFree
 	Clear-Variable -Name MailboxSizeThreshold
@@ -259,7 +269,7 @@ foreach($Mailbox in $Mailboxes) {
 	Clear-Variable -Name DeletedItemsQuota
 	Clear-Variable -Name DeletedItemsPercentFree
 	Clear-Variable -Name DeletedItemsThreshold
-	Clear-Variable -Name ArchiveSize #>
+	Clear-Variable -Name ArchiveSize
 }
 
 #Export data to csv
